@@ -10,4 +10,6 @@
 #include "../lib/cReturnType/cReturnType.h"
 #include "../lib/cLoopMacro/cLoopMacro.h"
 
+#include "Arduino.h"
+
 #endif
