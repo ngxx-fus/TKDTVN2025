@@ -6,108 +6,97 @@
 #include "../../include/projectConfig.h"
 
 // CONFIG: enable / disable log levels
-#ifndef CB_LOG_L0_EN
-    #define CB_LOG_L0_EN 1
+#ifndef SYS_LOG_L0_EN
+    #define SYS_LOG_L0_EN 1
 #endif
-#ifndef CB_LOG_L1_EN
-    #define CB_LOG_L1_EN 0
+#ifndef SYS_LOG_L1_EN
+    #define SYS_LOG_L1_EN 0
 #endif
-#ifndef CB_LOG_L2_EN
-    #define CB_LOG_L2_EN 0
+#ifndef SYS_LOG_L2_EN
+    #define SYS_LOG_L2_EN 0
 #endif
-#ifndef CB_LOG_ERR_EN
-    #define CB_LOG_ERR_EN 1
+#ifndef SYS_LOG_ERR_EN
+    #define SYS_LOG_ERR_EN 1
 #endif
-#ifndef CB_LOG_L0_ENTRY
-    #define CB_LOG_L0_ENTRY 1
+#ifndef SYS_LOG_L0_ENTRY
+    #define SYS_LOG_L0_ENTRY 1
 #endif
-#ifndef CB_LOG_L0_EXIT
-    #define CB_LOG_L0_EXIT 1
+#ifndef SYS_LOG_L0_EXIT
+    #define SYS_LOG_L0_EXIT 1
 #endif
-#ifndef CB_LOG_L1_ENTRY
-    #define CB_LOG_L1_ENTRY 0
+#ifndef SYS_LOG_L1_ENTRY
+    #define SYS_LOG_L1_ENTRY 0
 #endif
-#ifndef CB_LOG_L1_EXIT
-    #define CB_LOG_L1_EXIT 0
+#ifndef SYS_LOG_L1_EXIT
+    #define SYS_LOG_L1_EXIT 0
 #endif
-#ifndef CB_LOG_L2_ENTRY
-    #define CB_LOG_L2_ENTRY 0
+#ifndef SYS_LOG_L2_ENTRY
+    #define SYS_LOG_L2_ENTRY 0
 #endif
-#ifndef CB_LOG_L2_EXIT
-    #define CB_LOG_L2_EXIT 0
+#ifndef SYS_LOG_L2_EXIT
+    #define SYS_LOG_L2_EXIT 0
 #endif
-
-// Core logging function (Arduino version)
-template <typename... Args>
-void __coreLog(const char *tag, Args... args)
-{
-    Serial.print('[');
-    Serial.print(tag);
-    Serial.print("] ");
-    ((Serial.print(args)), ...);
-    Serial.println();
-}
 
 // Log macros
 
-#if (CB_LOG_L0_EN == 1)
-    #define __log(...) __coreLog("log", __VA_ARGS__)
+#if (SYS_LOG_L0_EN == 1)
+    #define __log(fmt, ...)          ets_printf("[%lld] [log] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __log(...)
+    #define __log(fmt, ...)
 #endif
 
-#if (CB_LOG_L1_EN == 1)
-    #define __log1(...) __coreLog("log1", __VA_ARGS__)
+#if (SYS_LOG_L1_EN == 1)
+    #define __log1(fmt, ...)         ets_printf("[%lld] [log1] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __log1(...)
+    #define __log1(fmt, ...)
 #endif
 
-#if (CB_LOG_L2_EN == 1)
-    #define __log2(...) __coreLog("log2", __VA_ARGS__)
+#if (SYS_LOG_L2_EN == 1)
+    #define __log2(fmt, ...)         ets_printf("[%lld] [log2] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __log2(...)
+    #define __log2(fmt, ...)
 #endif
 
-#if (CB_LOG_ERR_EN == 1)
-    #define __err(...) __coreLog("err", __VA_ARGS__)
+#if (SYS_LOG_ERR_EN == 1)
+    #define __err(fmt, ...)          ets_printf("[%lld] [err] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __err(...)
+    #define __err(fmt, ...)
 #endif
 
-#if (CB_LOG_L0_ENTRY == 1)
-    #define __entry(...) __coreLog(">>>", __VA_ARGS__)
+#if (SYS_LOG_L0_ENTRY == 1)
+    #define __entry(fmt, ...)        ets_printf("[%lld] [>>>] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __entry(...)
+    #define __entry(fmt, ...)
 #endif
 
-#if (CB_LOG_L0_EXIT == 1)
-    #define __exit(...) __coreLog("<<<", __VA_ARGS__)
+#if (SYS_LOG_L0_EXIT == 1)
+    #define __exit(fmt, ...)         ets_printf("[%lld] [<<<] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __exit(...)
+    #define __exit(fmt, ...)
 #endif
 
-#if (CB_LOG_L1_ENTRY == 1)
-    #define __entry1(...) __coreLog(">>>1", __VA_ARGS__)
+#if (SYS_LOG_L1_ENTRY == 1)
+    #define __entry1(fmt, ...)       ets_printf("[%lld] [>>>] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __entry1(...)
+    #define __entry1(fmt, ...)
 #endif
 
-#if (CB_LOG_L1_EXIT == 1)
-    #define __exit1(...) __coreLog("<<<1", __VA_ARGS__)
+#if (SYS_LOG_L1_EXIT == 1)
+    #define __exit1(fmt, ...)        ets_printf("[%lld] [<<<] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __exit1(...)
+    #define __exit1(fmt, ...)
 #endif
 
-#if (CB_LOG_L2_ENTRY == 1)
-    #define __entry2(...) __coreLog(">>>2", __VA_ARGS__)
+#if (SYS_LOG_L2_ENTRY == 1)
+    #define __entry2(fmt, ...)       ets_printf("[%lld] [>>>] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __entry2(...)
+    #define __entry2(fmt, ...)
 #endif
 
-#if (CB_LOG_L2_EXIT == 1)
-    #define __exit2(...) __coreLog("<<<2", __VA_ARGS__)
+#if (SYS_LOG_L2_EXIT == 1)
+    #define __exit2(fmt, ...)        ets_printf("[%lld] [<<<] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __exit2(...)
+    #define __exit2(fmt, ...)
 #endif
 
 #endif // __LOG_ARDUINO_H__

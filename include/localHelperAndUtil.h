@@ -4,6 +4,7 @@
 #include "projectConfig.h"
 
 #include "../lib/espSerialWrap/espSerialWrap.h"
+#include "../lib/freeRTOSWrap/freeRTOSWrap.h"
 
 #include "../lib/cArithmeticMacro/cArithmeticMacro.h"
 #include "../lib/cBitWiseMacro/cBitWiseMacro.h"
