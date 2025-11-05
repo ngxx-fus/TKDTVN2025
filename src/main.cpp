@@ -94,5 +94,6 @@ void setup(){
 
 void loop(){
     /// Infinity lock :>
+    __log("[loop] Put loop() to infinity sleep!");
     vTaskDelay(portMAX_DELAY);
 }
