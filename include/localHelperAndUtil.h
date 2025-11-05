@@ -3,6 +3,8 @@
 
 #include "projectConfig.h"
 
+#include "Arduino.h"
+
 #include "../lib/espSerialWrap/espSerialWrap.h"
 #include "../lib/freeRTOSWrap/freeRTOSWrap.h"
 
@@ -11,6 +13,14 @@
 #include "../lib/cReturnType/cReturnType.h"
 #include "../lib/cLoopMacro/cLoopMacro.h"
 
-#include "Arduino.h"
+/// For I2C communication
+#include "Wire.h"
+
+/// For SPI communication
+#include "SPI.h"
+
+/// For MPU6050
+#include "MPU6050.h"
+
 
 #endif
