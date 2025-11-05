@@ -64,4 +64,5 @@ Tham khảo: [“platformio.ini” (Project Configuration File)](https://docs.pl
 
 1. Mở thư mục trên VSCode (Open folder).
 2. Tạo file **platformio.ini**
-3. Mở file platformio.ini, và thực hiện theo các hướng dẫn.
+3. Mở file platformio.ini, và thực hiện theo các hướng dẫn. 
+3.1. Nếu platformio không khởi chạy, hãy nhấn vào biểu tượng của platformio trên thanh ``Side bar``
