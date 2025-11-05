@@ -4,19 +4,26 @@ void Task01(void* pv){
     __entry("Task01()");
     
     while(1){
-
-        vTaskDelay(1);
+        GPIO.out_w1tc = __mask32(HM_LED0_PIN);
+        vTaskDelay(100);
+        GPIO.out_w1ts = __mask32(HM_LED0_PIN);
+        vTaskDelay(100);
     }
 
     __exit("Task01()");
 }
 
 void Task02(void* pv){
+    __entry("Task02()");
     
 
     while(1){
-        vTaskDelay(1);
+        GPIO.out_w1tc = __mask32(HM_LED1_PIN);
+        vTaskDelay(300);
+        GPIO.out_w1ts = __mask32(HM_LED1_PIN);
+        vTaskDelay(300);
     }
+    __exit("Task02()");
 }
 
 void setup(){
@@ -31,6 +38,11 @@ void setup(){
         .intr_type = GPIO_INTR_DISABLE,
     };
     gpio_config(&outPin);
+
+    __log("[+] Add Task01");
+    xTaskCreate(Task01, "Task01", 2048, NULL, 1, NULL);
+    __log("[+] Add Task01");
+    xTaskCreate(Task02, "Task02", 2048, NULL, 1, NULL);
 
 
     __exit("setup()");
