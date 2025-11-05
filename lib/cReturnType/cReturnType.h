@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "../../include/projectConfig.h"
+
 /// Default return type
 typedef int32_t def;
 

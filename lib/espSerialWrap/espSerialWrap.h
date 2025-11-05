@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "../../include/projectConfig.h"
+
 // CONFIG: enable / disable log levels
 #ifndef CB_LOG_L0_EN
     #define CB_LOG_L0_EN 1
