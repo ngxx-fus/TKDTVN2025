@@ -15,6 +15,8 @@
 #include <math.h>
 #include <limits.h>
 
+#include "../../include/projectConfig.h"
+
 /**
  * @brief Return the maximum of two values.
  * @param a First value.

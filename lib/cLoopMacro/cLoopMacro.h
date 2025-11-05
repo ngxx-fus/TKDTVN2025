@@ -1,6 +1,8 @@
 #ifndef __HELPER_LOOP_H__
 #define __HELPER_LOOP_H__
 
+#include "../../include/projectConfig.h"
+
 /**
  * @brief Loop macro for iterating over a range with a specified type.
  * @param type The data type of the loop variable.

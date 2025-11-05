@@ -16,6 +16,8 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#include "../../include/projectConfig.h"
+
 /* -------------------------
  * Bit-mask helpers
  * ------------------------- */
