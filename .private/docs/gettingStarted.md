@@ -2,11 +2,20 @@
 
 ## Git basic
 
+
 ### Git? GitHub?
+
+- Git – A version control system that tracks changes in your code and allows you to manage different versions of a project locally.
+
+- GitHub – A cloud-based platform that hosts Git repositories, making it easy to collaborate, share, and back up your projects online.
 
 ### Commit?
 
+Commit – A snapshot of your changes in the repository. Each commit represents a saved point in your project’s history.
+
 ### Branch?
+
+Branch – A separate line of development. You can create branches to work on new features or fixes without affecting the main code.
 
 ### Commit - A recovery point for your code
 
@@ -30,7 +39,7 @@ Result:
 
 Description:
 
-- `On branch base` : You’re currently on the base branch.
+- `On branch base` : You’re currently on the `base` branch.
 - `Your branch is ahead of 'origin/base' by 2 commits.` : You have two local commits that haven’t been pushed to GitHub yet.
 - `Changes not staged for commit:` : These are tracked files that have been modified but not added to the next commit.
 - `Untracked files:` : These are new files not yet tracked by Git. You may have just created or added them.
@@ -62,6 +71,8 @@ git commit
 ```
 
 Result:
+
+![alt text](../imgs/gettingStarted2.png)
 
 ### Conflicts - Unavoidable
  
