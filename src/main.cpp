@@ -26,8 +26,7 @@ void Task02(void* pv){
     __exit("Task02()");
 }
 
-void Task03(void *pv)
-{
+void Task03(void *pv){
     __entry("Task03()");
 
     if( mpu6050Init() != OKE ){
@@ -85,5 +84,6 @@ void setup(){
 
 void loop(){
     /// Infinity lock :>
+    __log("[loop] Put loop() to infinity sleep!");
     vTaskDelay(portMAX_DELAY);
 }
