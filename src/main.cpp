@@ -25,8 +25,7 @@ void Task02(void* pv){
     __exit("Task02()");
 }
 
-void Task03(void *pv)
-{
+void Task03(void *pv){
     __entry("Task03()");
 
     MPU6050 mpu;
@@ -39,7 +38,7 @@ void Task03(void *pv)
     mpu.initialize();
     if (!mpu.testConnection()) {
         __log("[Task03] "  "MPU6050 connection failed!");
-        vTaskDelete(NULL); // Dừng task nếu cảm biến không phản hồi
+        vTaskDelete(NULL); // Stop this task if the sensor didn't respond
     } else {
         __log("[Task03] "  "MPU6050 connected successfully.");
     }
