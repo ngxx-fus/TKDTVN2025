@@ -91,10 +91,95 @@ Fast-forward merge means:
 - Git simply moved the branch pointer (HM) forward to match the latest commit from base.
 - No new merge commit was created — it’s a clean, automatic update.
 
+#### Pull/Fetch - Sync your code
+
+**fetch**
+Keep your local repository up to date with the remote one using git fetch or git pull.
+```
+git fetch
+```
+
+**pull**
+```
+git pull
+```
+
+Runs git fetch and then automatically merges the latest changes into your current branch.
+
+
+### Remote - Upstream
+
+A remote in Git is a reference to a repository hosted elsewhere (usually on GitHub, GitLab, or another server). It allows you to synchronize your local repository with others.
+
+Check existing remotes:
+```
+git remote -v
+```
+
+Result:
+![alt text](../imgs/gettingStarted4.png)
+
+**Notice that:** You also can have many remotes. The image be below illustrate the remote:
+
+![alt text](../imgs/gettingStarted5.png)
+
+**Sometime**, you need to specify the remote to execute `push` or `pull` command.
+
+```
+git push -u <remote name ?> <branch name?>
+git pull    <remote name ?> <branch name?>
+```
+
+Example:
+```
+git push -u origin base
+git pull origin base
+```
+
+You can create new remote via command below:
+```
+git remote add <remote/upstream name; usually: origin> <repository URL>
+```
+
+### Push your code
+
+After committing your changes locally, you can upload (push) them to the remote repository on GitHub.
+
+```
+git push
+```
+
+or with specified upstream or in first time push:
+```
+git push -u <remote name ?> <branch name?>
+```
+
+### Jump between branches
+
+Switch to another branch using:
+```
+git checkout <dest branch name>
+```
+Explanation:
+- Moves your working directory to the specified branch.
+- Updates your files to match that branch’s latest commit.
+- Any uncommitted changes will stay, but may cause conflicts if they affect the same files.
+
+**Newer Alternative (Recommended):**
+```
+git switch <branch-name>
+```
+```git switch``` is a clearer, modern command introduced in newer Git versions. It works just like git checkout for switching branches, but is easier to understand.
+
 ### Conflicts - Unavoidable
  
 The part above shows an ideal workflow. In real life, it’s much more complicated. If a node (a state or commit) has two child nodes with similar changes in different branches, then when you merge those branches, a conflict is very likely to occur. Simply put, if you merge two commits that modify the same lines or positions in the code, a conflict will occur.
 
+**Scenario**: You have edited the repository directly on GitHub. Later, when you return to your local environment, your local branch is not yet synchronized (you forgot to run git pull). After making many new changes locally, you try to push them back to GitHub — but since the remote version has also changed, a conflict occurs. The image below illustrates this scenario.
+
+![alt text](../imgs/gettingStarted6.png)
+
 There are three ways to solve the config, but in that section, i will talk about one of them. 
+
 
 **Rebase**
