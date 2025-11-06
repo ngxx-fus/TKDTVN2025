@@ -48,7 +48,7 @@
 #endif
 
 #if (SYS_SEMAPHORE_LOG_EN == 1)
-    static SemaphoreHandle_t logMutex = NULL;
+    extern SemaphoreHandle_t logMutex;
     
     inline void semaphoreLogInit(){
         if (logMutex == NULL)
@@ -61,31 +61,30 @@
     #define __coreLog(...)              ets_printf(__VA_ARGS__);
 #endif
 
-
 // Log macros
 
 #if (SYS_LOG_L0_EN == 1)
-    #define __log(fmt, ...)          __coreLog("[%lld] [log] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
+    #define __sys_log(fmt, ...)          __coreLog("[%lld] [log] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __log(fmt, ...)
+    #define __sys_log(fmt, ...)
 #endif
 
 #if (SYS_LOG_L1_EN == 1)
-    #define __log1(fmt, ...)         __coreLog("[%lld] [log1] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
+    #define __sys_log1(fmt, ...)         __coreLog("[%lld] [log1] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __log1(fmt, ...)
+    #define __sys_log1(fmt, ...)
 #endif
 
 #if (SYS_LOG_L2_EN == 1)
-    #define __log2(fmt, ...)         __coreLog("[%lld] [log2] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
+    #define __sys_log2(fmt, ...)         __coreLog("[%lld] [log2] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __log2(fmt, ...)
+    #define __sys_log2(fmt, ...)
 #endif
 
 #if (SYS_LOG_ERR_EN == 1)
-    #define __err(fmt, ...)          __coreLog("[%lld] [err] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
+    #define __sys_err(fmt, ...)          __coreLog("[%lld] [err] " fmt "\n", esp_timer_get_time(), ##__VA_ARGS__)
 #else
-    #define __err(fmt, ...)
+    #define __sys_err(fmt, ...)
 #endif
 
 #if (SYS_LOG_L0_ENTRY == 1)

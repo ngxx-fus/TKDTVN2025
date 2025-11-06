@@ -7,7 +7,8 @@
         "xhash": "cpp",
         "xstring": "cpp",
         "xutility": "cpp",
-        "random": "c"
+        "random": "c",
+        "chrono": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
