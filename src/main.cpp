@@ -1,4 +1,5 @@
 #include "../include/localHelperAndUtil.h"
+#include "../include/extLib.h"
 
 void Task01(void* pv){
     __entry("Task01()");
@@ -28,24 +29,14 @@ void Task02(void* pv){
 void Task03(void *pv){
     __entry("Task03()");
 
-    MPU6050 mpu;
-
-    // --- Init I2C ---
-    Wire.begin();
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-
-    // --- Init MPU6050 ---
-    mpu.initialize();
-    if (!mpu.testConnection()) {
-        __log("[Task03]  MPU6050 connection failed! ---> Stop this task!");
-        vTaskDelete(NULL); // Stop this task if the sensor didn't respond
-    } else {
-        __log("[Task03]  MPU6050 connected successfully.");
+    if( mpu6050Init() != OKE ){
+        vTaskDelete(NULL);
+        __exit("Task03() : [X] ERR");
+        return;
     }
 
     // Data variables
-    int16_t ax, ay, az;
-    int16_t gx, gy, gz;
+    mpu6050Data_t mpuData;
 
     // Main loop
     while (1) {
