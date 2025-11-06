@@ -207,3 +207,50 @@ git push
 git pull --no-rebase
 ```
 But this will create an extra merge commit in your history.
+
+## Brief
+
+1. When you clone or receive the repository, you should check out your working branch.
+**Note**: Create new one if it does not existed
+```
+git checkout -b <new branch name>
+```
+Or, if you want to rename the current branch, use:
+```
+git branch -m <new branch name>
+```
+When you push your local branch to the remote, a new branch will be created on GitHub automatically:
+```
+git push -u origin <new-branch-name>
+```
+
+2. Before you start editing the code, always pull the latest updates from the remote repository to make sure your local branch is up to date.
+
+- Prevents conflicts caused by outdated local code.
+- Ensures your work is built on top of the most recent commits.
+- Makes collaboration smoother when multiple people edit the same project.
+
+3. After making changes, you should commit and push your work frequently to keep your progress safe and synchronized with the remote repository.
+
+```
+git add .
+git commit -m "<short and clear message>"
+```
+Examples:
+```
+git commit -m "Fix sensor reading bug"
+git commit -m "Add Wi-Fi connection setup"
+```
+
+4. Split Your Changes (Best Practice) - Instead of putting everything in one big commit, try to split your changes into smaller, meaningful commits.
+- One commit per logical change or feature.
+- Easier to review, test, and roll back if needed.
+- Keeps project history clean and understandable.
+Example:
+```
+git add src/main.cpp
+git commit -m "Implement temperature sensor driver"
+
+git add src/network.cpp
+git commit -m "Add MQTT connection handler"
+```
