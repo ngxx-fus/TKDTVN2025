@@ -1,11 +1,13 @@
 {
     "files.associations": {
+        "*.h": "c",
         "initializer_list": "cpp",
         "list": "cpp",
         "vector": "cpp",
         "xhash": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "random": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
