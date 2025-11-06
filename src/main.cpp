@@ -37,10 +37,10 @@ void Task03(void *pv){
     // --- Init MPU6050 ---
     mpu.initialize();
     if (!mpu.testConnection()) {
-        __log("[Task03] "  "MPU6050 connection failed!");
+        __log("[Task03]  MPU6050 connection failed! ---> Stop this task!");
         vTaskDelete(NULL); // Stop this task if the sensor didn't respond
     } else {
-        __log("[Task03] "  "MPU6050 connected successfully.");
+        __log("[Task03]  MPU6050 connected successfully.");
     }
 
     // Data variables

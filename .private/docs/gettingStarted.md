@@ -74,6 +74,23 @@ Result:
 
 ![alt text](../imgs/gettingStarted2.png)
 
+#### Merge - Update your code
+
+You can merge changes from one branch into another using the git merge command.
+
+```
+git checkout <dest branch name>
+git merge <src branch name>
+```
+
+Result:
+![alt text](../imgs/gettingStarted3.png)
+
+Fast-forward merge means:
+- There were no conflicting changes between the two branches.
+- Git simply moved the branch pointer (HM) forward to match the latest commit from base.
+- No new merge commit was created — it’s a clean, automatic update.
+
 ### Conflicts - Unavoidable
  
 The part above shows an ideal workflow. In real life, it’s much more complicated. If a node (a state or commit) has two child nodes with similar changes in different branches, then when you merge those branches, a conflict is very likely to occur. Simply put, if you merge two commits that modify the same lines or positions in the code, a conflict will occur.
