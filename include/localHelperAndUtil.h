@@ -13,14 +13,4 @@
 #include "../lib/cReturnType/cReturnType.h"
 #include "../lib/cLoopMacro/cLoopMacro.h"
 
-/// For I2C communication
-#include "Wire.h"
-
-/// For SPI communication
-#include "SPI.h"
-
-/// For MPU6050
-#include "MPU6050.h"
-
-
 #endif

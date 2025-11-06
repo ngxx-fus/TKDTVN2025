@@ -36,15 +36,14 @@ void Task03(void *pv){
     // --- Init MPU6050 ---
     mpu.initialize();
     if (!mpu.testConnection()) {
-        __log("[Task03]  MPU6050 connection failed! ---> Stop this task!");
-        vTaskDelete(NULL); // Stop this task if the sensor didn't respond
+        __log("[Task03] "  "MPU6050 connection failed!");
+        vTaskDelete(NULL); // Dừng task nếu cảm biến không phản hồi
     } else {
-        __log("[Task03]  MPU6050 connected successfully.");
+        __log("[Task03] "  "MPU6050 connected successfully.");
     }
 
     // Data variables
-    int16_t ax, ay, az;
-    int16_t gx, gy, gz;
+    mpu6050Data_t mpuData;
 
     // Main loop
     while (1) {
