@@ -1,6 +1,12 @@
 #ifndef __SAFE_COMMUNICATE_H__
 #define __SAFE_COMMUNICATE_H__
 
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+extern "C" {                                                      ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
+
 #include "stdint.h"
 
 /* Dataframe:
@@ -81,4 +87,10 @@ void stDecoderInit(stDecoderState* state);
  */
 void stDecodeChunk(stDecoderState* state, const uint8_t* encoded, int encoded_size, uint8_t* rawData, int* dataWritten, uint8_t* rawCmd, int* cmdWritten);
 
+
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+}                                                                 ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
 #endif // __SAFE_COMMUNICATE_H__

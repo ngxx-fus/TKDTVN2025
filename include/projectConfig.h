@@ -1,6 +1,8 @@
 #ifndef __PROJECT_CONFIG_H__
 #define __PROJECT_CONFIG_H__
 
+/// #pragma message("[include] projectConfig.h")
+
 #include "stdint.h"
 
 /// CONFIG | LOG //////////////////////////////////////////////////////////////////////////////////
@@ -18,8 +20,8 @@
 
 /// CONFIG | OTHERS ///////////////////////////////////////////////////////////////////////////////
 
-#define FIREBASE_SYNC_EN        0
 #define LIGHT_TICK_EN           1
+#define FIREBASE_SYNC_EN        0
 #define SENSOR_HCSR04_EN        1
 #define SENSOR_MPU6050_EN       1
 

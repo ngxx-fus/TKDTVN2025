@@ -1,5 +1,11 @@
 #ifndef __HELPER_CONDITION_H__
 #define __HELPER_CONDITION_H__
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+extern "C" {                                                      ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
+/// #pragma message("[include] cArithmeticMacro.h")
 
 /**
  * @file helper.h
@@ -95,5 +101,11 @@
  * @return Non-zero if x is greater than or equal to zero, zero otherwise.
  */
 #define __isnot_negative(x) ((x) >= 0)
+
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+}                                                                 ///
+#endif                                                            ///
+////////////////////////////////////////////////////////////////////
 
 #endif

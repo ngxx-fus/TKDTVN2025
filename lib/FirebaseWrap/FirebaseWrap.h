@@ -1,6 +1,8 @@
 #if (FIREBASE_SYNC_EN == 1) && !defined(__FIREBASE_WRAP_H__)
 #define __FIREBASE_WRAP_H__
 
+/// #pragma message("[include] FirebaseWrap.h")
+
 #include "stdint.h"
 
 #include "../../include/projectConfig.h"
@@ -51,5 +53,6 @@ void wfInit();
 void fbInit();
 
 def fbUploadMPU6050Data();
+
 
 #endif /// __FIREBASE_WRAP_H__

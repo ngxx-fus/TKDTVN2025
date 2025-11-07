@@ -1,8 +1,15 @@
 #ifndef __HELPER_LOOP_H__
 #define __HELPER_LOOP_H__
 
-#include "../../include/projectConfig.h"
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+extern "C" {                                                      ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
 
+/// #pragma message("[include] cLoopMacro.h")
+
+#include "../../include/projectConfig.h"
 /**
  * @brief Loop macro for iterating over a range with a specified type.
  * @param type The data type of the loop variable.
@@ -49,6 +56,9 @@
     #define REV(i, a, b) for(int i = (a); (i) > (b); --(i))
 #endif
 
-
-
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+}                                                                 ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
 #endif ///__HELPER_LOOP_H__

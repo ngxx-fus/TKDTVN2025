@@ -1,6 +1,8 @@
 #ifndef __LOG_ARDUINO_H__
 #define __LOG_ARDUINO_H__
 
+/// #pragma message("[include] espSerialWrap.h")
+
 #include <Arduino.h>
 
 #include "../../include/projectConfig.h"

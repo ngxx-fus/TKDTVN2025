@@ -1,5 +1,12 @@
 #ifndef __FLAG_H__
 #define __FLAG_H__
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+extern "C" {                                                      ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
+
+/// #pragma message("[include] cBitWiseMacro.h")
 
 /*
  * flag.h
@@ -83,4 +90,11 @@ typedef uint32_t flag_t;
 #define NONE_FLAG_SET             ((flag_t)0x00000000U)
 #define ALL_FLAG_SET              ((flag_t)0xFFFFFFFFU)
 
+
+
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+}                                                                 ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
 #endif /* __FLAG_H__ */

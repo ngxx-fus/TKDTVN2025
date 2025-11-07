@@ -1,6 +1,14 @@
 #ifndef __C_RETURN_TYPE_H__
 #define __C_RETURN_TYPE_H__
 
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+extern "C" {                                                      ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
+
+/// #pragma message("[include] cReturnType.h")
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -106,7 +114,7 @@ enum DEFAULT_RETURN_STATUS {
 /// @brief Get a string for a given return code.
 /// @param ret Error/status code
 /// @return String representation (never NULL)
-static inline const char * DEFAULT_RETURN_STATUS_STR(enum DEFAULT_RETURN_STATUS ret)
+static inline const char * DEFAULT_RETURN_STATUS_STR(int ret)
 {
     switch (ret) {
         case STATUS_OKE:                     return STR_STATUS_OKE;
@@ -147,4 +155,10 @@ static inline const char * DEFAULT_RETURN_STATUS_STR(enum DEFAULT_RETURN_STATUS 
     }
 }
 
+
+/// EXTEND FOR C++ //////////////////////////////////////////////////
+#ifdef __cplusplus                                                ///
+}                                                                 ///
+#endif                                                            ///
+/////////////////////////////////////////////////////////////////////
 #endif /* __C_RETURN_TYPE_H__ */
