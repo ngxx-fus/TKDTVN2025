@@ -9,7 +9,7 @@
 #endif
 
 #if (SENSOR_HCSR04_EN == 1)
-    #include "../lib/HCRS04Wrap/HCRS04Wrap.h"
+    #include "../lib/cHCSR04Wrap/cHCSR04Wrap.h"
 #endif
 
 #endif
