@@ -1,3 +1,5 @@
+#if (FIREBASE_SYNC_EN == 1)
+
 #include "FirebaseWrap.h"
 
 #include "WiFi.h"
@@ -65,3 +67,6 @@ def fbUploadMPU6050Data(){
     // Firebase.getString(firebaseData, FBRTDB_MPU6050_PATH "/ax");
     return STATUS_OKE;
 }
+
+
+#endif

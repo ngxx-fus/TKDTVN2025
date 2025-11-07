@@ -1,6 +1,8 @@
 #ifndef __LOCAL_HELPER_AND_UTIL_H__
 #define __LOCAL_HELPER_AND_UTIL_H__
 
+/// #pragma message("[include] localHelperAndUtil.h")
+
 #include "projectConfig.h"
 #include "Arduino.h"
 

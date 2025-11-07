@@ -1,15 +1,16 @@
 #ifndef __MPU6050_WRAP_H__
 #define __MPU6050_WRAP_H__
 
+/// #pragma message("[include] MPU6050Wrap.h")
 
-#include "stdint.h"
-#include "Wire.h"
-#include "MPU6050.h"
+#include "stdint.h"                                     /// For uint8_t, int16_t, ...
+#include "../../include/projectConfig.h"                /// For *_EN, ... macros
+#include "../cReturnType/cReturnType.h"                 /// For def, STATUS_OKE, STATUS_ERR*
+#include "../espSerialWrap/espSerialWrap.h"             /// For __sys_log, __entry, __exit,...
+#include "../freeRTOSWrap/freeRTOSWrap.h"
 
-#include "../../include/projectConfig.h"
-
-#include "../cReturnType/cReturnType.h"
-#include "../espSerialWrap/espSerialWrap.h"
+#include "Wire.h"                                       /// For I2C Hardware
+#include "MPU6050.h"                                    /// For MPU6050 sensor
 
 /// SDA: GPIO21
 /// SCL: GPIO22
