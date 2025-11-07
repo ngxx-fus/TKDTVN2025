@@ -2,7 +2,6 @@
 #define __LOCAL_HELPER_AND_UTIL_H__
 
 #include "projectConfig.h"
-
 #include "Arduino.h"
 
 #include "../lib/espSerialWrap/espSerialWrap.h"
