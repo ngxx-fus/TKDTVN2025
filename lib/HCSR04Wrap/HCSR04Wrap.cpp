@@ -107,7 +107,7 @@ def hcsr04MeasureAll(){
                 timeLow = esp_timer_get_time();
                 break;
             }
-            if((timeLow = esp_timer_get_time()) - timeHigh > 30000) {
+            if((timeLow = esp_timer_get_time()) - timeHigh > 300000) {
                 /// Error occured!
                 __sys_err("[hcsr04MeasureAll] Loop-%d: WaitingForLow timeout(%lld)!", i, (timeLow - timeHigh));
                 return STATUS_ERR;

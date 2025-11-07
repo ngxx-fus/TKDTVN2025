@@ -46,6 +46,7 @@
 #endif
 
 #if (SENSOR_HCSR04_EN == 1)
+    #define HCSR04_C_PIN            16              /// Comon Trigger
     #define HCSR04_0_PIN            19              /// Front
     #define HCSR04_1_PIN            5               /// Right
     #define HCSR04_2_PIN            18              /// Back

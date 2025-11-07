@@ -68,12 +68,14 @@
 #if (SENSOR_HCSR04_EN == 1)
     void TaskHCSR04(void *pv){
         def returnValue = 0;
-        hcsr04Dev.T0 = hcsr04Dev.T1 = hcsr04Dev.T2 = hcsr04Dev.T3 = 
+        hcsr04Dev.T0 = hcsr04Dev.T1 = hcsr04Dev.T2 = hcsr04Dev.T3 = HCSR04_C_PIN;
+        hcsr04Dev.E0 = HCSR04_0_PIN;    hcsr04Dev.E2 = HCSR04_2_PIN;
+        hcsr04Dev.E1 = HCSR04_1_PIN;    hcsr04Dev.E3 = HCSR04_3_PIN;
         hcsr04Init();
         while(1){
             returnValue = hcsr04MeasureAll();
             if(returnValue != STATUS_OKE) 
-                __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s", DEFAULT_RETURN_STATUS_STR(returnValue));
+            __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s", DEFAULT_RETURN_STATUS_STR(returnValue));
             __sys_log("[TaskHCSR04] F:%d R:%d B:%d L:%d", 
                         hcsr04Data.arr[0], hcsr04Data.arr[1],
                         hcsr04Data.arr[2], hcsr04Data.arr[3]);
