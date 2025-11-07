@@ -1,4 +1,4 @@
-#ifndef __FIREBASE_WRAP_H__
+#if (FIREBASE_SYNC_EN == 1) && !defined(__FIREBASE_WRAP_H__)
 #define __FIREBASE_WRAP_H__
 
 #include "stdint.h"
