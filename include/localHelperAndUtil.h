@@ -1,15 +1,15 @@
 #ifndef __LOCAL_HELPER_AND_UTIL_H__
 #define __LOCAL_HELPER_AND_UTIL_H__
 
-#include "projectConfig.h"
-#include "Arduino.h"
+#include "projectConfig.h" // Giả sử file này ở cùng thư mục
+#include <Arduino.h>
 
-#include "../lib/espSerialWrap/espSerialWrap.h"
-#include "../lib/freeRTOSWrap/freeRTOSWrap.h"
+// Sửa đường dẫn: Dùng <> và bỏ đường dẫn
+#include <espSerialWrap.h>
+#include <freeRTOSWrap.h>
+#include <cArithmeticMacro.h>
+#include <cBitWiseMacro.h>
+#include <cReturnType.h>
+#include <cLoopMacro.h>
 
-#include "../lib/cArithmeticMacro/cArithmeticMacro.h"
-#include "../lib/cBitWiseMacro/cBitWiseMacro.h"
-#include "../lib/cReturnType/cReturnType.h"
-#include "../lib/cLoopMacro/cLoopMacro.h"
-
-#endif
+#endif // __LOCAL_HELPER_AND_UTIL_H__
