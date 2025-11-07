@@ -1,5 +1,4 @@
-#include "../include/localHelperAndUtil.h"
-#include "../include/extLib.h"
+#include "main.h"
 
 void Task01(void* pv){
     __entry("Task01()");
@@ -10,7 +9,6 @@ void Task01(void* pv){
         GPIO.out_w1ts = __mask32(HM_LED0_PIN);
         vTaskDelay(100);
     }
-//cmm
     __exit("Task01()");
 }
 
@@ -29,28 +27,32 @@ void Task02(void* pv){
 void Task03(void *pv){
     __entry("Task03()");
 
-    if( mpu6050Init() != OKE ){
+
+    // Init MPU6050
+    if (mpu6050Init() != STATUS_OKE) {
+        __sys_log("[Task03] "  "MPU6050 connection failed!");
         vTaskDelete(NULL);
-        __exit("Task03() : [X] ERR");
-        return;
+    } else {
+        __sys_log("[Task03] "  "MPU6050 connected successfully.");
     }
-
-    // Data variables
-    mpu6050Data_t mpuData;
-
     // Main loop
     while (1) {
-        mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-
-        // Print onto Serial / Log
-        __log("[Task03] " "A[x:%d y:%d z:%d] G[x:%d y:%d z:%d]", ax, ay, az, gx, gy, gz);
-
-        // Delay 750 ms
+        mpu6050Measure();
+        __sys_log("[Task03] a[x: %d, y: %d, z: %d] g[x: %d, y: %d, z: %d]", mpuData.ax, mpuData.ay, mpuData.az, mpuData.gx, mpuData.gy, mpuData.gz);
         vTaskDelay(pdMS_TO_TICKS(350));
     }
 
     __exit("Task03()");
     vTaskDelete(NULL);
+}
+
+void Task04(void* pv){
+    __entry("Task04()");
+    while(1){
+        if(fbUploadMPU6050Data()!=STATUS_OKE) __sys_log("[Task04] Upload failed!");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    __exit("Task04()");
 }
 
 void setup(){
@@ -71,19 +73,25 @@ void setup(){
     };
     gpio_config(&outPin);
 
+    // skip firebase
+    // wfInit();
+    // fbInit();
+
     /// Add Task01 and Task02 and Task03
-    __log("[+] Add Task01");
+    __sys_log("[+] Add Task01");
     xTaskCreate(Task01, "Task01", 2048, NULL, 1, NULL);
-    __log("[+] Add Task02");
+    __sys_log("[+] Add Task02");
     xTaskCreate(Task02, "Task02", 2048, NULL, 1, NULL);
-    __log("[+] Add Task03");
+    __sys_log("[+] Add Task03");
     xTaskCreate(Task03, "Task03", 2048, NULL, 1, NULL);
+    // __sys_log("[+] Add Task04");
+    // xTaskCreate(Task04, "Task04", 2048, NULL, 1, NULL);
 
     __exit("setup()");
 }
 
 void loop(){
     /// Infinity lock :>
-    __log("[loop] Put loop() to infinity sleep!");
+    __sys_log("[loop] Put loop() to infinity sleep!");
     vTaskDelay(portMAX_DELAY);
 }

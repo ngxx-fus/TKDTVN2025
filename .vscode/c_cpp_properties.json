@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/home/codespace/.platformio/packages/framework-arduinoespressif32/**",
-                "/home/codespace/.platformio/packages/framework-arduinoespressif32/cores/esp32/**"
+                "/home/codespace/.platformio/packages/framework-arduinoespressif32/cores/esp32/**",
+                "/home/codespace/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include/esp_additions/freertos"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

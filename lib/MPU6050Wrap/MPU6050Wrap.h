@@ -6,6 +6,8 @@
 #include "Wire.h"
 #include "MPU6050.h"
 
+#include "../../include/projectConfig.h"
+
 #include "../cReturnType/cReturnType.h"
 #include "../espSerialWrap/espSerialWrap.h"
 
@@ -25,6 +27,7 @@ typedef union mpu6050Data_t{
 }   mpu6050Data_t;
 
 extern MPU6050 mpuDev;
+extern mpu6050Data_t mpuData;
 
 static inline def mpu6050Init(){
     __entry("mpu6050Init()");
@@ -34,27 +37,27 @@ static inline def mpu6050Init(){
     /// Initial MPU6050
     mpuDev.initialize();
     if (!mpuDev.testConnection()) {
-        __exit("mpu6050Init() : ERR_INIT_FAILED");
-        return ERR_INIT_FAILED;
+        __exit("mpu6050Init() : SYS_STATUS_ERR__INIT_FAILED");
+        return STATUS_ERR_INIT_FAILED;
     }
     __exit("mpu6050Init() : OKE");
-    return OKE;
+    return STATUS_OKE;
 }
 
-static inline void mpu6050Measure(mpu6050Data_t* result){
+static inline void mpu6050Measure(){
     mpuDev.getMotion6(
-        &(result->ax), &(result->ay), &(result->az), 
-        &(result->gx), &(result->gy), &(result->gz)
+        &(mpuData.ax), &(mpuData.ay), &(mpuData.az), 
+        &(mpuData.gx), &(mpuData.gy), &(mpuData.gz)
     );
 }
 
-static inline void mpu6050EncodeToTransmit(mpu6050Data_t* result, ){
-    
-}
+// static inline void mpu6050EncodeToTransmit(mpu6050Data_t* result, ){
+    // 
+// }
 
-static inline void mpu6050DecodeFromReceive(mpu6050Data_t* result){
-    
-}
+// static inline void mpu6050DecodeFromReceive(mpu6050Data_t* result){
+    // 
+// }
 
 
 #endif
