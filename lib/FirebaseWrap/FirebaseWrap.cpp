@@ -1,67 +1,64 @@
 #include "FirebaseWrap.h"
-
-#include "WiFi.h"
-#include "FirebaseESP32.h"
-#include <cReturnType.h>
-
-FirebaseData firebaseData;
+FirebaseData fbdo;
 FirebaseAuth auth;
-FirebaseConfig config;
+FirebaseConfig fbconfig;
 
-def wfIsConnected(){
-    if(WiFi.status() != WL_CONNECTED){
-        return STATUS_ERR;
-    }
-    return STATUS_OKE;
+// ... (Các hàm wfIsConnected, wfInit, fbInit của bạn giữ nguyên) ...
+
+DEFAULT_RETURN_STATUS wfIsConnected() {
+  return (WiFi.status() == WL_CONNECTED) ? STATUS_OKE : STATUS_ERR;
 }
 
-void wfInit(){
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-        do{
-            __sys_log("[wfInit] Connecting to Wi-fi...");
-            delay(2000);
-        }while(WiFi.status() != WL_CONNECTED);
-    __sys_log("[wfInit] Connected to Wi-fi!");
+void wfInit() {
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  do {
+    __sys_log("[wfInit] Connecting WiFi...");
+    delay(1000);
+  } while (WiFi.status() != WL_CONNECTED);
+  __sys_log("[wfInit] WiFi connected. IP: %s", WiFi.localIP().toString().c_str());
 }
 
 void fbInit() {
-    __entry("fbInit()");
-    config.api_key = FBRTDB_URL;
-    config.database_url = FBRTDB_URL;
-    auth.user.email = FB_USER_EMAIL;
-    auth.user.password = FB_USER_PASSWORD;
-    do {
-        __sys_log("[fbInit]  Connecting...");
-        Firebase.begin(&config, &auth);
-        if (firebaseData.httpCode() != 200) {
-            __sys_log("HTTP code: %d", firebaseData.httpCode());
-        }
-        if (firebaseData.errorReason().length() > 0) {
-            __sys_log("Error: %s", firebaseData.errorReason().c_str());
-        }
-    }while(!Firebase.ready());
-    Firebase.reconnectNetwork(true);
-    __sys_log("[fbInit] Connected to Firebase!");
+  __entry("fbInit()");
+
+  // Đoạn này của bạn đã gán đúng, không bị nhầm như comment
+  fbconfig.api_key = FB_API_KEY;
+  fbconfig.database_url = FBRTDB_URL;
+
+  auth.user.email = FB_USER_EMAIL;
+  auth.user.password = FB_USER_PASSWORD;
+
+  Firebase.reconnectWiFi(true);
+  Firebase.begin(&fbconfig, &auth);
+
+  while (!Firebase.ready()) {
+    __sys_log("[fbInit] Waiting for Firebase.ready()...");
+    delay(200);
+  }
+  __sys_log("[fbInit] Firebase ready!");
+  __exit("fbInit()");
 }
 
-def fbUploadMPU6050Data(){
 
-    if (WiFi.status() != WL_CONNECTED) return STATUS_ERR;
+// *** GỢI Ý CẢI TIẾN ***
+// Dùng setFloat() thay vì setString() để lưu dữ liệu dạng số
+DEFAULT_RETURN_STATUS fbUploadMPU6050Data() {
+  if (wfIsConnected() != STATUS_OKE) return STATUS_ERR;
 
-    uint8_t upload =
-        Firebase.setString(firebaseData, FBRTDB_MPU6050_PATH "/ax", String(mpuData.ax)) &&
-        Firebase.setString(firebaseData, FBRTDB_MPU6050_PATH "/ay", String(mpuData.ay)) &&
-        Firebase.setString(firebaseData, FBRTDB_MPU6050_PATH "/az", String(mpuData.az)) &&
-        Firebase.setString(firebaseData, FBRTDB_MPU6050_PATH "/gx", String(mpuData.gx)) &&
-        Firebase.setString(firebaseData, FBRTDB_MPU6050_PATH "/gy", String(mpuData.gy)) &&
-        Firebase.setString(firebaseData, FBRTDB_MPU6050_PATH "/gz", String(mpuData.gz));
+  // Giả sử mpuData.ax, ay, az... là kiểu float
+  // Nếu chúng là int, bạn có thể dùng setInt()
+  bool ok = true;
+  ok &= Firebase.RTDB.setFloat(&fbdo, FBRTDB_MPU6050_PATH "/ax", mpuData.ax);
+  ok &= Firebase.RTDB.setFloat(&fbdo, FBRTDB_MPU6050_PATH "/ay", mpuData.ay);
+  ok &= Firebase.RTDB.setFloat(&fbdo, FBRTDB_MPU6050_PATH "/az", mpuData.az);
+  ok &= Firebase.RTDB.setFloat(&fbdo, FBRTDB_MPU6050_PATH "/gx", mpuData.gx);
+  ok &= Firebase.RTDB.setFloat(&fbdo, FBRTDB_MPU6050_PATH "/gy", mpuData.gy);
+  ok &= Firebase.RTDB.setFloat(&fbdo, FBRTDB_MPU6050_PATH "/gz", mpuData.gz);
 
-    if (upload == 0) {
-        __sys_err("[fbUploadMPU6050Data] Failed to sync MPU6050 data to Firebase!");
-        return STATUS_ERR;
-    }
-
-    // Optional: đọc lại để xác nhận
-    // Firebase.getString(firebaseData, FBRTDB_MPU6050_PATH "/ax");
-    return STATUS_OKE;
+  if (!ok) {
+    __sys_err("[fbUploadMPU6050Data] RTDB write failed: %s",
+              fbdo.errorReason().c_str());
+    return STATUS_ERR;
+  }
+  return STATUS_OKE;
 }

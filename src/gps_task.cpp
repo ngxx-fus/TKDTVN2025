@@ -2,18 +2,18 @@
  * FILE: src/gps_task.cpp
  * (Đây là code cho "yourTask")
  * ===================================================*/
+#include "main.h"       // macro log, semaphore
+#include "gps_task.h"
+#include <TinyGPSPlus.h>
 
-#include "gps_task.h"   // Include header của chính nó TRƯỚC
-#include "main.h"       // Include main.h SAU (để lấy logMutex)
-#include <TinyGPSPlus.h> 
+static HardwareSerial GPSSerial(2);  // static để tránh đụng symbol
+static TinyGPSPlus gps;
 
-// Khởi tạo các biến
-HardwareSerial GPSSerial(2); 
-TinyGPSPlus gps;
-#if (GPS_USE_PPS == 1) // Chỉ dùng cờ này nếu được bật
-    static volatile bool ppsTick = false; 
-    void IRAM_ATTR gpsPpsIsr() { ppsTick = true; }
+#if (GPS_USE_PPS == 1)
+static volatile bool ppsTick = false;
+void IRAM_ATTR gpsPpsIsr(){ ppsTick = true; }
 #endif
+
 
 
 /**

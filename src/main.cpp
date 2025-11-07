@@ -4,7 +4,7 @@
  * ===================================================*/
 
 #include "main.h" // Luôn include file .h tương ứng đầu tiên
-
+#include <cReturnType.h>
 // --- 1. ĐỊNH NGHĨA BIẾN TOÀN CỤC ---
 // (ĐÃ XÓA dòng "SemaphoreHandle_t logMutex = NULL;"
 // vì thư viện espSerialWrap của bạn đã làm việc này rồi)
@@ -19,7 +19,7 @@
         __entry("TaskLightTick()");
         /// Set-up LED
         gpio_config_t outPin = {
-            .pin_bit_mask = __masks64(LIGHT_TICK_PIN),
+            .pin_bit_mask = __mask64(LIGHT_TICK_PIN),
             .mode = GPIO_MODE_OUTPUT,
             .pull_up_en = GPIO_PULLUP_DISABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -70,22 +70,27 @@
 #endif
 
 #if (SENSOR_HCSR04_EN == 1)
-    void TaskHCSR04(void *pv){
-        int returnValue = 0; // Sửa lỗi "def"
-        hcsr04Dev.T0 = hcsr04Dev.T1 = hcsr04Dev.T2 = hcsr04Dev.T3 = HCSR04_C_PIN;
-        hcsr04Dev.E0 = HCSR04_0_PIN;    hcsr04Dev.E2 = HCSR04_2_PIN;
-        hcsr04Dev.E1 = HCSR04_1_PIN;    hcsr04Dev.E3 = HCSR04_3_PIN;
-        hcsr04Init();
-        while(1){
-            returnValue = hcsr04MeasureAll();
-            if(returnValue != STATUS_OKE) 
-            __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s", DEFAULT_RETURN_STATUS_STR(returnValue));
-            __sys_log("[TaskHCSR04] F:%d R:%d B:%d L:%d", 
-                        hcsr04Data.arr[0], hcsr04Data.arr[1],
-                        hcsr04Data.arr[2], hcsr04Data.arr[3]);
-            vTaskDelay(pdMS_TO_TICKS(950));
+   void TaskHCSR04(void *pv){
+    // ĐÚNG: dùng enum thay vì int
+    DEFAULT_RETURN_STATUS returnValue = STATUS_OKE;
+
+    hcsr04Dev.T0 = hcsr04Dev.T1 = hcsr04Dev.T2 = hcsr04Dev.T3 = HCSR04_C_PIN;
+    hcsr04Dev.E0 = HCSR04_0_PIN;    hcsr04Dev.E2 = HCSR04_2_PIN;
+    hcsr04Dev.E1 = HCSR04_1_PIN;    hcsr04Dev.E3 = HCSR04_3_PIN;
+
+    hcsr04Init();
+    while(1){
+        returnValue = hcsr04MeasureAll();   // def => DEFAULT_RETURN_STATUS
+        if (returnValue != STATUS_OKE){
+            __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s",
+                      DEFAULT_RETURN_STATUS_STR(returnValue));
         }
+        __sys_log("[TaskHCSR04] F:%d R:%d B:%d L:%d",
+                  hcsr04Data.arr[0], hcsr04Data.arr[1],
+                  hcsr04Data.arr[2], hcsr04Data.arr[3]);
+        vTaskDelay(pdMS_TO_TICKS(950));
     }
+}
 #endif
 
 
