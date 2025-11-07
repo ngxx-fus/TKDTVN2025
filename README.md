@@ -3,4 +3,4 @@ Cuộc thi Thiết kế điện tử Việt Nam 2025.
 
 # Branch info
 
-Base branch. Do not merge!
+Foo 's branch.
