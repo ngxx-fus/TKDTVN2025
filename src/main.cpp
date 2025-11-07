@@ -10,7 +10,7 @@ void yourTask(void* pv){
         /// your loop
         /// your loop get data from sensor
         /// log to serial
-        /// i recommand to use GLOBAL variable to store them.
+        /// i recommend to use GLOBAL variable to store them.
         /// Check MPU6050 for the structure.
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -40,8 +40,8 @@ void setup(){
     /// Add in mainTask, if stat-up allocate more than 2048B memory
     /// it will cause overflow
     /// Start-up/Init means you send config to your Sensor
-    /// Or initialize HW for comunication (UART)
-    /// In sumary, you will init twice times, one for Hardware, one for sensor
+    /// Or initialize HW for communication (UART)
+    /// In summary, you will init twice times, one for Hardware, one for sensor
     __sys_log("[+] Add yourTask");
     xTaskCreate(yourTask, "yourTask", 2048, NULL, 1, NULL);
     __exit("setup()");
