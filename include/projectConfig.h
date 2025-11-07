@@ -27,5 +27,8 @@
 #define FBRTDB_ROOT_PATH        "/"
 #define FBRTDB_MPU6050_PATH     FBRTDB_ROOT_PATH "mpu6050/"
 
+#define TICK_LIGHT_TIME_ON      
+#define TICK_LIGHT_TIME_ON      200
+#define TICK_LIGHT_TIME_ON      200
 
 #endif

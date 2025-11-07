@@ -14,9 +14,9 @@ void Task01(void* pv){
     /// Task01 : Blink LED with period 200 tick
     while(1){
         GPIO.out_w1tc = __mask32(HM_LED0_PIN);
-        vTaskDelay(pdMS_TO_TICKS(TICK_LIGHT_TIME_ON));
+        vTaskDelay(TICK_LIGHT_TIME_ON);
         GPIO.out_w1ts = __mask32(HM_LED0_PIN);
-        vTaskDelay(pdMS_TO_TICKS(TICK_LIGHT_TIME_OFF));
+        vTaskDelay(TICK_LIGHT_TIME_OFF);
     }
     __exit("Task01()");
 }
@@ -47,8 +47,7 @@ void Task03(void *pv){
     // Main loop
     while (1) {
         mpu6050Measure();
-        __sys_log("[Task03] a[x: %d, y: %d, z: %d] g[x: %d, y: %d, z: %d]", 
-            mpuData.ax, mpuData.ay, mpuData.az, mpuData.gx, mpuData.gy, mpuData.gz);
+        __sys_log("[Task03] a[x: %d, y: %d, z: %d] g[x: %d, y: %d, z: %d]", mpuData.ax, mpuData.ay, mpuData.az, mpuData.gx, mpuData.gy, mpuData.gz);
         vTaskDelay(pdMS_TO_TICKS(350));
     }
 
@@ -66,9 +65,12 @@ void Task04(void* pv){
 }
 
 void setup(){
-    Serial.begin(115200);       /// For serial log | Baudrate: 115200
-    semaphoreLogInit();         /// For semaphore log
-    __entry("setup()");         /// Other set-up
+    /// For serial log | Baudrate: 115200
+    Serial.begin(115200);
+    /// For semaphore log
+    semaphoreLogInit();
+    /// Other set-up
+    __entry("setup()");
 
     // skip firebase
     // wfInit();
