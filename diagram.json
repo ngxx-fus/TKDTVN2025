@@ -103,7 +103,7 @@
     [ "ultrasonic1:GND", "ultrasonic2:GND", "black", [ "v249.6", "h94.8", "v115.2" ] ],
     [ "ultrasonic2:GND", "ultrasonic3:GND", "black", [ "v76.8", "h661.2" ] ],
     [ "ultrasonic4:GND", "esp:GND.2", "black", [ "v0" ] ],
-    [ "ultrasonic1:TRIG", "ultrasonic2:TRIG", "green", [ "v259.2", "h134", "v124.8", "h-134.4" ] ],
+    [ "ultrasonic1:TRIG", "ultrasonic2:TRIG", "green", [ "v259.2", "h-106", "v153.6", "h106" ] ],
     [
       "ultrasonic4:TRIG",
       "ultrasonic1:TRIG",
@@ -125,7 +125,8 @@
       "orange",
       [ "v9.6", "h-135.2", "v-307.2", "h-201.6", "v67.2" ]
     ],
-    [ "r3:1", "ultrasonic2:GND", "black", [ "h38.4", "v134.4" ] ]
+    [ "r3:1", "ultrasonic2:GND", "black", [ "h38.4", "v134.4" ] ],
+    [ "ultrasonic2:TRIG", "esp:16", "green", [ "v48", "h374", "v-259.2" ] ]
   ],
   "dependencies": {}
 }

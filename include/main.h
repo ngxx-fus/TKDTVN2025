@@ -79,7 +79,7 @@
             __sys_log("[TaskHCSR04] F:%d R:%d B:%d L:%d", 
                         hcsr04Data.arr[0], hcsr04Data.arr[1],
                         hcsr04Data.arr[2], hcsr04Data.arr[3]);
-            vTaskDelay(pdMS_TO_TICKS(250));
+            vTaskDelay(pdMS_TO_TICKS(950));
         }
     }
 #endif

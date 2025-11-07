@@ -23,7 +23,7 @@
 #define LIGHT_TICK_EN           1
 #define FIREBASE_SYNC_EN        0
 #define SENSOR_HCSR04_EN        1
-#define SENSOR_MPU6050_EN       1
+#define SENSOR_MPU6050_EN       0
 
 /// DEFINITIONS ///////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +51,9 @@
     #define HCSR04_1_PIN            5               /// Right
     #define HCSR04_2_PIN            18              /// Back
     #define HCSR04_3_PIN            17              /// Left
+    #define HCSR04_WAIT_FOR_HIGH    25000           /// Wait for echo HIGH after trigger
+    #define HCSR04_WAIT_FOR_LOW     30000           /// Wait for echo LOW after posedge
+    #define HCSR04_WAIT_BEFORE_CONT 60              /// Wait before next trigger
 #endif
 
 

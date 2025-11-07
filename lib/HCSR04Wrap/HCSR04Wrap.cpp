@@ -13,22 +13,24 @@ void hcsr04Init(){
     pin.pull_down_en    = GPIO_PULLDOWN_DISABLE;
     pin.mode            = GPIO_MODE_OUTPUT;
     for(int i = 0; i < HCSR04_SERSOR_NUM; ++i) {
+        __sys_log("[hcsr04Init] hcsr04Dev.arr[%d] = %d", i, hcsr04Dev.arr[i]);
         pin.pin_bit_mask |= __mask64(hcsr04Dev.arr[i]);
     } 
-    gpio_config(&pin);
+    if(gpio_config(&pin) != ESP_OK) __sys_err("[hcsr04Init] Failed to config trigger pins!"); 
     /// Config ECHO pin
     pin.pin_bit_mask    = 0;
     for(int i = HCSR04_SERSOR_NUM; i < 2 * HCSR04_SERSOR_NUM; ++i) {
+        __sys_log("[hcsr04Init] hcsr04Dev.arr[%d] = %d", i, hcsr04Dev.arr[i]);
         pin.pin_bit_mask |= __mask64(hcsr04Dev.arr[i]); 
     }
     pin.intr_type       = GPIO_INTR_DISABLE;
     pin.pull_up_en      = GPIO_PULLUP_DISABLE;
     pin.pull_down_en    = GPIO_PULLDOWN_DISABLE;
     pin.mode            = GPIO_MODE_INPUT;
-    gpio_config(&pin);
+    if(gpio_config(&pin) != ESP_OK) __sys_err("[hcsr04Init] Failed to config echo pins!"); 
 }
 
-def hcsr04Config(hcsr04Dev_t * dev){
+void hcsr04Config(hcsr04Dev_t * dev){
     for(int i = 0; i < HCSR04_SERSOR_NUM * 2; ++i){
         hcsr04Dev.arr[i] = dev->arr[i];
     }
@@ -42,7 +44,7 @@ def hcsr04Measure(int i){
     ECHO_PIN_MASK       = __mask32(hcsr04Dev.arr[i+HCSR04_SERSOR_NUM]);
     /// Trigger 
     GPIO.out_w1ts = TRIGGER_PIN_MASK;
-    esp_rom_delay_us(10);
+    esp_rom_delay_us(11);
     GPIO.out_w1tc = TRIGGER_PIN_MASK;
     /// Wait for Echo HIGH
     int64_t timeHigh = esp_timer_get_time();
@@ -52,7 +54,7 @@ def hcsr04Measure(int i){
             timeHigh = esp_timer_get_time();
             break;
         }
-        if(esp_timer_get_time() - timeHigh > 25000) {
+        if(esp_timer_get_time() - timeHigh > HCSR04_WAIT_FOR_HIGH) {
             /// Error occured!
             return STATUS_ERR;
         }
@@ -65,7 +67,7 @@ def hcsr04Measure(int i){
             timeLow = esp_timer_get_time();
             break;
         }
-        if(esp_timer_get_time() - timeLow > 30000) {
+        if(esp_timer_get_time() - timeLow > HCSR04_WAIT_FOR_LOW) {
             /// Error occured!
             return STATUS_ERR;
         }
@@ -93,12 +95,13 @@ def hcsr04MeasureAll(){
                 timeHigh = esp_timer_get_time();
                 break;
             }
-            if(esp_timer_get_time() - timeHigh > 25000) {
-                __sys_err("[hcsr04MeasureAll] Loop-%d: WaitingForHigh timeout!", i);
+            if(esp_timer_get_time() - timeHigh > HCSR04_WAIT_FOR_HIGH) {
+                __sys_err("[hcsr04MeasureAll] Loop-%lld: WaitingForHigh timeout!", i);
                 /// Error occured!
                 return STATUS_ERR;
             }
         }
+
         /// Wait for Echo LOW
         int64_t timeLow = esp_timer_get_time();
         while(1){
@@ -107,16 +110,15 @@ def hcsr04MeasureAll(){
                 timeLow = esp_timer_get_time();
                 break;
             }
-            if((timeLow = esp_timer_get_time()) - timeHigh > 300000) {
+            if((timeLow = esp_timer_get_time()) - timeHigh > HCSR04_WAIT_FOR_LOW) {
                 /// Error occured!
-                __sys_err("[hcsr04MeasureAll] Loop-%d: WaitingForLow timeout(%lld)!", i, (timeLow - timeHigh));
+                __sys_err("[hcsr04MeasureAll] Loop-%lld: WaitingForLow timeout(%lld)!", i, (timeLow - timeHigh));
                 return STATUS_ERR;
             }
         }
         hcsr04Data.arr[i] = ((timeLow - timeHigh) *  17) / (1000);
         /// Wait 60ms before start the next measure process
-        esp_rom_delay_us(60);
-        vTaskDelay(0);
+        vTaskDelay(pdMS_TO_TICKS(HCSR04_WAIT_BEFORE_CONT));
     }
 
     return STATUS_OKE;

@@ -19,7 +19,7 @@ void setup(){
         xTaskCreate(TaskMPU6050, "TaskMPU6050", 2048, NULL, 1, NULL);
     #endif
 
-    #if (SENSOR_MPU6050_EN == 1)
+    #if (SENSOR_HCSR04_EN == 1)
         __sys_log("[setup] [+] Add TaskHCSR04");
         xTaskCreate(TaskHCSR04, "TaskHCSR04", 2048, NULL, 1, NULL);
     #endif

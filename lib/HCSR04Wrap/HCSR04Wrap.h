@@ -29,7 +29,7 @@ typedef union hcrs04Data_t{
         int16_t __2         : 16;
         int16_t __3         : 16;
     };
-    uint8_t arr[sizeof(int16_t) * HCSR04_SERSOR_NUM];
+    int16_t arr[HCSR04_SERSOR_NUM];
 }   hcrs04Data_t;
 
 extern hcsr04Dev_t      hcsr04Dev;
