@@ -14,21 +14,36 @@
 #define SYS_LOG_L2_ENTRY        0
 #define SYS_LOG_L2_EXIT         0
 
-#define HM_LED0_PIN             2     
-#define HM_LED1_PIN             0
+#define FIREBASE_SYNC_EN        0
+#define LIGHT_TICK_EN           1
+#define SENSOR_HCSR04_EN        1
+#define SENSOR_MPU6050_EN       1
+#define SENSOR_ATGM336H_EN      1
 
-#define FBRTDB_URL              "https://tkdtvn2025-default-rtdb.asia-southeast1.firebasedatabase.app/"
-#define FB_API_KEY              "AIzaSyBC-o4n9PbYDeWlKkxo-Jogn7EhwA96MZ8"
-#define FB_USER_EMAIL           "nthanhphu.k22.hcmute@gmail.com"
-#define FB_USER_PASSWORD        "@asjd2361qeuFASl:kHJDASsn#wer"
-#define WIFI_SSID               "Wokwi-GUEST"
-#define WIFI_PASSWORD           ""
+#if (FIREBASE_SYNC_EN == 1)
+    #define FBRTDB_URL              "https://tkdtvn2025-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    #define FB_API_KEY              "AIzaSyBC-o4n9PbYDeWlKkxo-Jogn7EhwA96MZ8"
+    #define FB_USER_EMAIL           "nthanhphu.k22.hcmute@gmail.com"
+    #define FB_USER_PASSWORD        "@asjd2361qeuFASl:kHJDASsn#wer"
+    #define WIFI_SSID               "Wokwi-GUEST"
+    #define WIFI_PASSWORD           ""
 
-#define FBRTDB_ROOT_PATH        "/"
-#define FBRTDB_MPU6050_PATH     FBRTDB_ROOT_PATH "mpu6050/"
+    #define FBRTDB_ROOT_PATH        "/"
+    #define FBRTDB_MPU6050_PATH     FBRTDB_ROOT_PATH "mpu6050/"
+#endif
 
-#define TICK_LIGHT_TIME_ON      
-#define TICK_LIGHT_TIME_ON      200
-#define TICK_LIGHT_TIME_ON      200
+#if (LIGHT_TICK_EN == 1)
+    #define LIGHT_TICK_PIN          2
+    #define LIGHT_TICK_TIME_ON      200
+    #define LIGHT_TICK_TIME_OFF     500
+#endif
+
+#if (SENSOR_HCSR04_EN == 1)
+    #define HCSR04_0_PIN            19              /// Front
+    #define HCSR04_1_PIN            5               /// Right
+    #define HCSR04_2_PIN            18              /// Back
+    #define HCSR04_3_PIN            17              /// Left
+#endif
+
 
 #endif
