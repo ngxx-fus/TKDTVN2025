@@ -21,7 +21,7 @@
 /// CONFIG | OTHERS ///////////////////////////////////////////////////////////////////////////////
 
 #define LIGHT_TICK_EN           1
-#define HM_STEP_MOTOR0_EN       0
+#define HM_STEP_MOTOR0_EN       1
 #define HM_STEP_MOTOR1_EN       0
 
 
@@ -34,17 +34,17 @@
 #endif
 
 #if (HM_STEP_MOTOR0_EN == 1)
-    #define HM_STEP_MOTOR0_PIN0     2
-    #define HM_STEP_MOTOR0_PIN1     3
-    #define HM_STEP_MOTOR0_PIN2     4
-    #define HM_STEP_MOTOR0_PIN3     5
+    #define HM_STEP_MOTOR0_PIN0     5
+    #define HM_STEP_MOTOR0_PIN1     4
+    #define HM_STEP_MOTOR0_PIN2     3
+    #define HM_STEP_MOTOR0_PIN3     2
 #endif
 
 #if (HM_STEP_MOTOR1_EN == 1)
-    #define HM_STEP_MOTOR1_PIN0     2
-    #define HM_STEP_MOTOR1_PIN1     3
-    #define HM_STEP_MOTOR1_PIN2     4
-    #define HM_STEP_MOTOR1_PIN3     5
+    #define HM_STEP_MOTOR1_PIN0     9
+    #define HM_STEP_MOTOR1_PIN1     8
+    #define HM_STEP_MOTOR1_PIN2     7
+    #define HM_STEP_MOTOR1_PIN3     6
 #endif
 
 
