@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "serialwarp.h": "c",
+        "arduino.h": "c"
+    }
+}
