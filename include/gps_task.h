@@ -6,10 +6,10 @@
 #define SENSOR_GPS_EN 1
 #endif
 #ifndef GPS_RX_PIN
-#define GPS_RX_PIN 16   // RX2 <- GPS TX
+#define GPS_RX_PIN 16   // ESP32 RX2  <- GPS TX
 #endif
 #ifndef GPS_TX_PIN
-#define GPS_TX_PIN 17   // TX2 -> GPS RX
+#define GPS_TX_PIN 17   // ESP32 TX2  -> GPS RX (không bắt buộc)
 #endif
 #ifndef GPS_BAUD
 #define GPS_BAUD 9600
@@ -21,7 +21,6 @@
 #define GPS_PPS_PIN 34
 #endif
 
-// ===== API (declaration only) =====
 #ifdef __cplusplus
 extern "C" {
 #endif
