@@ -1,3 +1,6 @@
+/* ===================================================
+ * FILE: project_config.h (ĐÃ SỬA)
+ * ===================================================*/
 #ifndef __PROJECT_CONFIG_H__
 #define __PROJECT_CONFIG_H__
 
@@ -42,7 +45,7 @@
     #define HCSR04_0_PIN 19 /// Front
     #define HCSR04_1_PIN 5 /// Right
     #define HCSR04_2_PIN 18 /// Back
-    #define HCSR04_3_PIN 17 /// Left
+    #define HCSR04_3_PIN 26 /// Left (ĐÃ THAY ĐỔI TỪ 17)
 #endif
 
 

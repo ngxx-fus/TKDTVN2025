@@ -123,6 +123,7 @@ void setup(){
   #endif
 
   #if (SENSOR_GPS_EN == 1)
+    __sys_log("[setup] ===== TEST CODE MOI: DANG DUNG PIN 32/33 ====="); // <--- THÊM DÒNG NÀY
     __sys_log("[setup] [+] Initializing GPS...");
     gpsInit();
     __sys_log("[setup] [+] Add TaskGPS");

@@ -1,3 +1,6 @@
+/* ===================================================
+ * FILE: gps_task.h (ĐÃ SỬA)
+ * ===================================================*/
 #pragma once
 #include <Arduino.h>
 
@@ -6,13 +9,13 @@
 #define SENSOR_GPS_EN 1
 #endif
 #ifndef GPS_RX_PIN
-#define GPS_RX_PIN 16   // ESP32 RX2  <- GPS TX
+#define GPS_RX_PIN 33   // ESP32 RX2  <- GPS TX (ĐÃ THAY ĐỔI TỪ 16)
 #endif
 #ifndef GPS_TX_PIN
-#define GPS_TX_PIN 17   // ESP32 TX2  -> GPS RX (không bắt buộc)
+#define GPS_TX_PIN 32   // ESP32 TX2  -> GPS RX (ĐÃ THAY ĐỔI TỪ 17)
 #endif
 #ifndef GPS_BAUD
-#define GPS_BAUD 9600
+#define GPS_BAUD 115200
 #endif
 #ifndef GPS_USE_PPS
 #define GPS_USE_PPS 0
