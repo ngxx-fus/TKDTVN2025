@@ -7,22 +7,21 @@
 
 /// CONFIG | LOG //////////////////////////////////////////////////////////////////////////////////
 
-#define SYS_LOG_L0_EN           1
-#define SYS_LOG_L1_EN           0
-#define SYS_LOG_L2_EN           0
+#define SYS_LOG_L0_EN               1
+#define SYS_LOG_L1_EN               0
+#define SYS_LOG_L2_EN               0
 #define SYS_LOG_err
-#define SYS_LOG_L0_ENTRY        1
-#define SYS_LOG_L0_EXIT         1
-#define SYS_LOG_L1_ENTRY        0
-#define SYS_LOG_L1_EXIT         0
-#define SYS_LOG_L2_ENTRY        0
-#define SYS_LOG_L2_EXIT         0
+#define SYS_LOG_L0_ENTRY            1
+#define SYS_LOG_L0_EXIT             1
+#define SYS_LOG_L1_ENTRY            0
+#define SYS_LOG_L1_EXIT             0
+#define SYS_LOG_L2_ENTRY            0
+#define SYS_LOG_L2_EXIT             0
 
 /// CONFIG | OTHERS ///////////////////////////////////////////////////////////////////////////////
 
-#define LIGHT_TICK_EN           1
-#define HM_STEP_MOTOR0_EN       1
-#define HM_STEP_MOTOR1_EN       0
+#define LIGHT_TICK_EN               1
+#define HM_XY_STEP_MOTOR_EN         1
 
 
 /// DEFINITIONS ///////////////////////////////////////////////////////////////////////////////////
@@ -33,18 +32,19 @@
     #define LIGHT_TICK_TIME_OFF     400
 #endif
 
-#if (HM_STEP_MOTOR0_EN == 1)
-    #define HM_STEP_MOTOR0_PIN0     5
-    #define HM_STEP_MOTOR0_PIN1     4
-    #define HM_STEP_MOTOR0_PIN2     3
-    #define HM_STEP_MOTOR0_PIN3     2
-#endif
-
-#if (HM_STEP_MOTOR1_EN == 1)
-    #define HM_STEP_MOTOR1_PIN0     9
-    #define HM_STEP_MOTOR1_PIN1     8
-    #define HM_STEP_MOTOR1_PIN2     7
-    #define HM_STEP_MOTOR1_PIN3     6
+#if (HM_XY_STEP_MOTOR_EN == 1)
+    #define HM_XY_STEP_MOTOR0_PIN0      5
+    #define HM_XY_STEP_MOTOR0_PIN1      4
+    #define HM_XY_STEP_MOTOR0_PIN2      3
+    #define HM_XY_STEP_MOTOR0_PIN3      2
+    #define HM_XY_STEP_MOTOR1_PIN0      9
+    #define HM_XY_STEP_MOTOR1_PIN1      8
+    #define HM_XY_STEP_MOTOR1_PIN2      7
+    #define HM_XY_STEP_MOTOR1_PIN3      6
+    #define HM_XY_LIMIT0_UPPER         -1
+    #define HM_XY_LIMIT0_LOWER         -1
+    #define HM_XY_LIMIT1_UPPER         -1
+    #define HM_XY_LIMIT1_LOWER         -1
 #endif
 
 
