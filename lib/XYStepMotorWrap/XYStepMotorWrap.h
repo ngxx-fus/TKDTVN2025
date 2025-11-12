@@ -16,8 +16,10 @@
 
 /// xysm = XY-Step-Motor
 
-// PIN DEFINITIONS
-
+// ===================================
+// MOTOR PIN DEFINITIONS
+// ===================================
+// (-1 means disabled)
 #ifndef HM_XY_STEP_MOTOR0_PIN0
     #define HM_XY_STEP_MOTOR0_PIN0     -1
 #endif
@@ -43,12 +45,30 @@
     #define HM_XY_STEP_MOTOR1_PIN3     -1
 #endif
 
+// ===================================
+// LIMIT SWITCH PIN DEFINITIONS
+// ===================================
+#ifndef HM_XY_LIMIT0_UPPER
+    #define HM_XY_LIMIT0_UPPER      -1
+#endif
+#ifndef HM_XY_LIMIT0_LOWER
+    #define HM_XY_LIMIT0_LOWER      -1
+#endif
+#ifndef HM_XY_LIMIT1_UPPER
+    #define HM_XY_LIMIT1_UPPER      -1
+#endif
+#ifndef HM_XY_LIMIT1_LOWER
+    #define HM_XY_LIMIT1_LOWER      -1
+#endif
 
+// ===================================
+// INTERNAL STATIC VARIABLES
+// ===================================
 
 static float xysmMaxSpeed = 400.0f; 
 static float xysmMaxAcceleration = 100.0f; 
 
-// Static definition, suitable for inclusion directly in .ino
+// --- Stepper Objects ---
 static AccelStepper stepper0(AccelStepper::FULL4WIRE,
                             HM_XY_STEP_MOTOR0_PIN0,
                             HM_XY_STEP_MOTOR0_PIN2,
@@ -60,25 +80,29 @@ static AccelStepper stepper1(AccelStepper::FULL4WIRE,
                             HM_XY_STEP_MOTOR1_PIN1,
                             HM_XY_STEP_MOTOR1_PIN3);
 
-// Use 'long' to match AccelStepper's internal type
+// --- Coordinate Sequence Types ---
 typedef std::pair<long, long> xysmPoint_t;
 
-// Vector storing target (X, Y) coordinates
 static std::vector<xysmPoint_t> xysmTargetPoints;
-// Vector storing wait time (in microseconds) at each point
 static std::vector<unsigned long> xysmWaitTimes_us;
 
-
+// --- State Machine Variables ---
 static size_t        xysmCurrentPointIndex = 0;
 static bool          xysmIsWaiting = false;
 static unsigned long xysmWaitStartTime_us = 0;
-// Flag to activate the sequence following
 static bool          xysmSequenceActive = false;
 
+// --- Limit Switch State ---
+static bool xysmLimit0UpperValid = false;
+static bool xysmLimit0LowerValid = false;
+static bool xysmLimit1UpperValid = false;
+static bool xysmLimit1LowerValid = false;
 
+// ===================================
+// FUNCTION IMPLEMENTATIONS (inline)
+// ===================================
 
-
-/// Initializes both motors with max speed and acceleration.
+/// Initializes motors, speed, acceleration, and limit switches.
 inline void xysmInit(float maxSpeed, float acceleration) {
     xysmMaxSpeed = maxSpeed;
     xysmMaxAcceleration = acceleration;
@@ -90,13 +114,46 @@ inline void xysmInit(float maxSpeed, float acceleration) {
     stepper1.setMaxSpeed(xysmMaxSpeed);
     stepper1.setAcceleration(xysmMaxAcceleration);
     stepper1.setCurrentPosition(0);
+
+    // Init Limit Switches (Active Low)
+    #if (HM_XY_LIMIT0_UPPER != -1)
+        pinMode(HM_XY_LIMIT0_UPPER, INPUT_PULLUP);
+        xysmLimit0UpperValid = true;
+    #endif
+    #if (HM_XY_LIMIT0_LOWER != -1)
+        pinMode(HM_XY_LIMIT0_LOWER, INPUT_PULLUP);
+        xysmLimit0LowerValid = true;
+    #endif
+    #if (HM_XY_LIMIT1_UPPER != -1)
+        pinMode(HM_XY_LIMIT1_UPPER, INPUT_PULLUP);
+        xysmLimit1UpperValid = true;
+    #endif
+    #if (HM_XY_LIMIT1_LOWER != -1)
+        pinMode(HM_XY_LIMIT1_LOWER, INPUT_PULLUP);
+        xysmLimit1LowerValid = true;
+    #endif
 }
 
-/// Manually moves the motors by a relative distance (disables sequence).
+/// Manually moves the motors by a relative distance (checks limits).
 inline void xysmMove(long dx, long dy) {
-    // Disable sequence on manual override
     xysmSequenceActive = false; 
+
+    // Check X-axis limits before commanding move
+    if (xysmLimit0UpperValid && digitalRead(HM_XY_LIMIT0_UPPER) == LOW && dx > 0) {
+        dx = 0; // Prevent moving further into upper limit
+    }
+    if (xysmLimit0LowerValid && digitalRead(HM_XY_LIMIT0_LOWER) == LOW && dx < 0) {
+        dx = 0; // Prevent moving further into lower limit
+    }
     stepper0.move(dx);
+
+    // Check Y-axis limits before commanding move
+    if (xysmLimit1UpperValid && digitalRead(HM_XY_LIMIT1_UPPER) == LOW && dy > 0) {
+        dy = 0;
+    }
+    if (xysmLimit1LowerValid && digitalRead(HM_XY_LIMIT1_LOWER) == LOW && dy < 0) {
+        dy = 0;
+    }
     stepper1.move(dy);
 }
 
@@ -114,29 +171,60 @@ inline void xysmClearTargetPoints() {
     xysmSequenceActive = false;
 }
 
-/// Starts or restarts the coordinate sequence from the first point.
+/// Starts or restarts the coordinate sequence (checks limits).
 inline void xysmStartSequence() {
     if (xysmTargetPoints.empty()) {
         return; // Nothing to run
     }
     xysmCurrentPointIndex = 0;
-    xysmIsWaiting = false; // Start by moving, not waiting
+    xysmIsWaiting = false; 
     xysmSequenceActive = true;
 
-    // Move to the first point
+    // Move to the first point, after checking limits
     auto& firstPoint = xysmTargetPoints[0];
-    stepper0.moveTo(firstPoint.first);
-    stepper1.moveTo(firstPoint.second);
+    long nextX = firstPoint.first;
+    long nextY = firstPoint.second;
+
+    if (xysmLimit0UpperValid && digitalRead(HM_XY_LIMIT0_UPPER) == LOW && (nextX > stepper0.currentPosition())) {
+        nextX = stepper0.currentPosition(); // Clamp target
+    }
+    if (xysmLimit0LowerValid && digitalRead(HM_XY_LIMIT0_LOWER) == LOW && (nextX < stepper0.currentPosition())) {
+        nextX = stepper0.currentPosition(); // Clamp target
+    }
+    stepper0.moveTo(nextX);
+    
+    if (xysmLimit1UpperValid && digitalRead(HM_XY_LIMIT1_UPPER) == LOW && (nextY > stepper1.currentPosition())) {
+        nextY = stepper1.currentPosition(); // Clamp target
+    }
+    if (xysmLimit1LowerValid && digitalRead(HM_XY_LIMIT1_LOWER) == LOW && (nextY < stepper1.currentPosition())) {
+        nextY = stepper1.currentPosition(); // Clamp target
+    }
+    stepper1.moveTo(nextY);
 }
 
-/// [LOW-LEVEL] Must be called repeatedly in loop() to generate step pulses.
+/// [LOW-LEVEL] Must be called repeatedly, handles emergency stops from limits.
 inline void xysmRun() {
+    // Check for emergency stops (if logic tries to move into an active limit)
+    if (xysmLimit0UpperValid && digitalRead(HM_XY_LIMIT0_UPPER) == LOW && (stepper0.targetPosition() > stepper0.currentPosition())) {
+        stepper0.stop(); // Force stop
+    }
+    if (xysmLimit0LowerValid && digitalRead(HM_XY_LIMIT0_LOWER) == LOW && (stepper0.targetPosition() < stepper0.currentPosition())) {
+        stepper0.stop(); // Force stop
+    }
+    
+    if (xysmLimit1UpperValid && digitalRead(HM_XY_LIMIT1_UPPER) == LOW && (stepper1.targetPosition() > stepper1.currentPosition())) {
+        stepper1.stop(); // Force stop
+    }
+    if (xysmLimit1LowerValid && digitalRead(HM_XY_LIMIT1_LOWER) == LOW && (stepper1.targetPosition() < stepper1.currentPosition())) {
+        stepper1.stop(); // Force stop
+    }
+
     // Always run the low-level controllers
     stepper0.run();
     stepper1.run();
 }
 
-/// [HIGH-LEVEL] Must be called repeatedly in loop() to manage the sequence.
+/// [HIGH-LEVEL] Must be called repeatedly, manages sequence (checks limits).
 inline void xysmFollowTargetPoints() {
     // 1. Do nothing if sequence is not active or empty
     if (!xysmSequenceActive || xysmTargetPoints.empty()) {
@@ -155,10 +243,26 @@ inline void xysmFollowTargetPoints() {
             // 3. Get next point (LOOPING)
             xysmCurrentPointIndex = (xysmCurrentPointIndex + 1) % xysmTargetPoints.size();
             
-            // 4. Command move to the next point
+            // 4. Command move to the next point (WITH LIMIT CHECKS)
             auto& nextPoint = xysmTargetPoints[xysmCurrentPointIndex];
-            stepper0.moveTo(nextPoint.first);
-            stepper1.moveTo(nextPoint.second);
+            long nextX = nextPoint.first;
+            long nextY = nextPoint.second;
+
+            if (xysmLimit0UpperValid && digitalRead(HM_XY_LIMIT0_UPPER) == LOW && (nextX > stepper0.currentPosition())) {
+                nextX = stepper0.currentPosition(); // Clamp target
+            }
+            if (xysmLimit0LowerValid && digitalRead(HM_XY_LIMIT0_LOWER) == LOW && (nextX < stepper0.currentPosition())) {
+                nextX = stepper0.currentPosition(); // Clamp target
+            }
+            stepper0.moveTo(nextX);
+            
+            if (xysmLimit1UpperValid && digitalRead(HM_XY_LIMIT1_UPPER) == LOW && (nextY > stepper1.currentPosition())) {
+                nextY = stepper1.currentPosition(); // Clamp target
+            }
+            if (xysmLimit1LowerValid && digitalRead(HM_XY_LIMIT1_LOWER) == LOW && (nextY < stepper1.currentPosition())) {
+                nextY = stepper1.currentPosition(); // Clamp target
+            }
+            stepper1.moveTo(nextY);
         }
         // (If not finished waiting, do nothing)
 
