@@ -117,9 +117,44 @@ void fbInit() {
 #endif /// (SENSOR_HCSR04_EN == 1)
 
 #if (SENSOR_ATGM336H_EN == 1)
-    def fbUploadATGM336HData(){
-     
-        return STATUS_ERR;
+    /// @brief Upload ATGM336H GPS data to Firebase RTDB
+    /// @return STATUS_OKE on success, STATUS_ERR on failure
+    def fbUploadATGM336HData() {
+        if (WiFi.status() != WL_CONNECTED) {
+            return STATUS_ERR;
+        }
+
+        static FirebaseJson gpsJson;
+        gpsJson.clear();
+
+        // Location Data
+        gpsJson.set("latitude", gpsData.latitude);
+        gpsJson.set("longitude", gpsData.longitude);
+        gpsJson.set("speed_kmh", gpsData.speed_kmh);
+        gpsJson.set("sats", gpsData.sats);
+
+        // GPS Timestamp
+        gpsJson.set("year", gpsData.year);
+        gpsJson.set("month", gpsData.month);
+        gpsJson.set("day", gpsData.day);
+        gpsJson.set("hh", gpsData.hour);
+        gpsJson.set("mm", gpsData.minute);
+        gpsJson.set("ss", gpsData.second);
+
+        // System Timestamp (us)
+        gpsJson.set("ts", esp_timer_get_time()); 
+
+        // Attempt to update the node
+        // Note: Ensure FBRTDB_ATGM336H_PATH is defined in projectConfig.h
+        bool upload_ok = Firebase.updateNode(firebaseData, FBRTDB_ATGM336H_PATH, gpsJson);
+
+        if (!upload_ok) {
+            __sys_err("[fbUploadATGM336HData] Failed to sync GPS JSON data!");
+            __sys_err("[fbUploadATGM336HData] Firebase Error: %s", firebaseData.errorReason().c_str());
+            return STATUS_ERR;
+        }
+
+        return STATUS_OKE;
     }
 #endif /// (SENSOR_ATGM336H_EN == 1)
 

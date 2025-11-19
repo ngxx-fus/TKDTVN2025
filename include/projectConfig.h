@@ -43,15 +43,16 @@
     #define FBRTDB_ROOT_PATH        "/"
     #define FBRTDB_MPU6050_PATH     FBRTDB_ROOT_PATH "mpu6050/"
     #define FBRTDB_HCSR04_PATH      FBRTDB_ROOT_PATH "hcrs04/"
+    #define FBRTDB_ATGM336H_PATH    FBRTDB_ROOT_PATH "atgm336h/"
 
-    #define FB_SYNC_DELAY           2000000 /// In micro-sec
+    #define FB_SYNC_DELAY           5000000 /// In micro-sec
 #endif /// (FIREBASE_SYNC_EN == 1)
 
 #if (LIGHT_TICK_EN == 1)
     #define LIGHT_TICK_PIN          19
     #define LIGHT_TICK_TIME_ON      50
     #define LIGHT_TICK_TIME_OFF     50
-    #define LIGHT_TICK_CYCLIC_PATTERN "101010000"
+    #define LIGHT_TICK_CYCLIC_PATTERN "101010000000000000000000"
 #endif /// (LIGHT_TICK_EN == 1)
 
 #if (SENSOR_HCSR04_EN == 1)
@@ -69,9 +70,10 @@
     #define SENSOR_GPS_EN           1
     #define GPS_RX_PIN              33
     #define GPS_TX_PIN              32
-    #define GPS_BAUD                115200
+    #define GPS_BAUD                9600
     #define GPS_PPS_EN              1
     #define GPS_PPS_PIN             35
+    #define GPS_SERIAL_NUM          2
 #endif  /// (SENSOR_ATGM336H_EN == 1)
 
 #endif  /// __PROJECT_CONFIG_H__

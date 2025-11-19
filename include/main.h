@@ -10,7 +10,7 @@
         __entry("TaskLightTick()");
         /// Set-up LED for TaskLightTick
         gpio_config_t outPin = {
-            .pin_bit_mask = __masks64(LIGHT_TICK_PIN),
+            .pin_bit_mask = __mask64(LIGHT_TICK_PIN),
             .mode = GPIO_MODE_OUTPUT,
             .pull_up_en = GPIO_PULLUP_DISABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -105,4 +105,104 @@
 
 #if (SENSOR_ATGM336H_EN == 1)
 
+/// --- ISR Variables ---
+#if (GPS_PPS_EN == 1)
+    static volatile bool gpsUpdateDataNow = false;
+    
+    void IRAM_ATTR gpsPpsIsr(){
+        gpsUpdateDataNow = true; 
+    }
+#endif
+
+/// @brief Main Task for ATGM336H GPS Module
+/// @param pv Task parameters (unused)
+void TaskATGM336H(void* pv){
+    __sys_log("[TaskATGM336H] Task Started. UART%d @%d", GPS_SERIAL_NUM, GPS_BAUD);
+
+    /// 1. Initialize UART
+    gpsSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+
+    /// 2. Initialize PPS Pin if enabled
+    #if (GPS_PPS_EN == 1)
+        pinMode(GPS_PPS_PIN, INPUT);
+        attachInterrupt(digitalPinToInterrupt(GPS_PPS_PIN), gpsPpsIsr, RISING);
+    #endif
+
+    uint32_t lastRxTime = millis();
+
+    for(;;) {
+        /// 3. Parse NMEA data from UART
+        while (gpsSerial.available()) {
+            gpsDevice.encode(gpsSerial.read());
+            lastRxTime = millis(); // Update RX timestamp
+        }
+
+        /// 3.1 Check for hardware timeout (No data for 5 seconds)
+        if (millis() - lastRxTime > 5000) {
+            __sys_err("[TaskATGM336H] Timeout! No data received for 5s. Check wiring RX/TX!");
+            lastRxTime = millis(); // Reset to avoid spamming error log
+        }
+
+        /// 4. Check & Update Date/Time
+        if (gpsDevice.date.isUpdated() || gpsDevice.time.isUpdated()) {
+            if (gpsDevice.date.isValid() && gpsDevice.time.isValid()) {
+                gpsData.year   = gpsDevice.date.year();
+                gpsData.month  = gpsDevice.date.month();
+                gpsData.day    = gpsDevice.date.day();
+                gpsData.hour   = gpsDevice.time.hour();
+                gpsData.minute = gpsDevice.time.minute();
+                gpsData.second = gpsDevice.time.second();
+                
+                gpsSetUpdateFlag(GPS_UPDATA_DATE_TIME);
+            } else {
+                /// Log error if NMEA sentence received but data is garbage
+                __sys_err("[TaskATGM336H] Date/Time updated but INVALID.");
+            }
+        }
+
+        /// 5. Check & Update Location
+        if (gpsDevice.location.isUpdated()) {
+            if (gpsDevice.location.isValid()) {
+                gpsData.latitude  = gpsDevice.location.lat();
+                gpsData.longitude = gpsDevice.location.lng();
+                
+                /// Update speed here as it usually comes with location
+                if (gpsDevice.speed.isValid()) {
+                    gpsData.speed_kmh = gpsDevice.speed.kmph();
+                }
+
+                gpsSetUpdateFlag(GPS_UPDATA_LOCATION);
+            } else {
+                /// Log error, usually means 'V' (Void) status in NMEA (No GPS Fix yet)
+                __sys_err("[TaskATGM336H] Location updated but INVALID (No Fix).");
+            }
+        }
+
+        /// 6. Check & Update Others (Satellites)
+        if (gpsDevice.satellites.isUpdated()) {
+            if (gpsDevice.satellites.isValid()) {
+                gpsData.sats = gpsDevice.satellites.value();
+                
+                gpsSetUpdateFlag(GPS_UPDATA_OTHERS);
+            } else {
+                 __sys_err("[TaskATGM336H] Sats count updated but INVALID.");
+            }
+        }
+
+        /// 7. Handle PPS (Optional logic from old task)
+        #if (GPS_PPS_EN == 1)
+            if (gpsUpdateDataNow) {
+                gpsUpdateDataNow = false;
+                /// PPS handling logic here (if needed)
+            }
+        #endif
+
+        /// 8. Yield to other tasks
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    
+    vTaskDelete(NULL);
+}
+
 #endif /// (SENSOR_ATGM336H_EN == 1)
+
