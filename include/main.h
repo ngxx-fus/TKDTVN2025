@@ -61,27 +61,91 @@
 #endif /// (FIREBASE_SYNC_EN == 1)
 
 #if (SENSOR_HCSR04_EN == 1)
+    /// @brief Task to handle HC-SR04 Ultrasonic Sensor measurements
+    /// @param pv Task parameters (unused)
     void TaskHCSR04(void *pv){
         def returnValue = 0;
+        
+        /// Initialize Soft Timer for precise 950ms cycle
+        espSoftTimer_t hcsr04Timer;
+        espSoftTimerInit(&hcsr04Timer, HCSR04_MEASURE_INTERVAL); // 950ms = 950,000us
+
+        /// Setup pins
         hcsr04Dev.T0 = hcsr04Dev.T1 = hcsr04Dev.T2 = hcsr04Dev.T3 = HCSR04_C_PIN;
         hcsr04Dev.E0 = HCSR04_0_PIN;    hcsr04Dev.E2 = HCSR04_2_PIN;
         hcsr04Dev.E1 = HCSR04_1_PIN;    hcsr04Dev.E3 = HCSR04_3_PIN;
         hcsr04Init();
+
         while(1){
             returnValue = hcsr04MeasureAll();
+            
             if(returnValue != STATUS_OKE) 
-            __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s", DEFAULT_RETURN_STATUS_STR(returnValue));
+                __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s", DEFAULT_RETURN_STATUS_STR(returnValue));
+            
             __sys_log("[TaskHCSR04] F:%d R:%d B:%d L:%d", 
                         hcsr04Data.arr[0], hcsr04Data.arr[1],
                         hcsr04Data.arr[2], hcsr04Data.arr[3]);
-            vTaskDelay(pdMS_TO_TICKS(950));
+
+            /// Wait for the remainder of the 950ms cycle (Precise Timing)
+            /// This compensates for the execution time of measurements and logs
+            __EST_WAIT_AND_RESET_EXEC(&hcsr04Timer, vTaskDelay(pdMS_TO_TICKS(10)));
+        }
+    }
+#endif /// (SENSOR_HCSR04_EN == 1)
+
+#include "espSoftTimer.h"
+
+#if (SENSOR_HCSR04_EN == 1)
+    /// @brief Task to handle HC-SR04 Ultrasonic Sensor measurements with precise timing
+    /// @param pv Task parameters (unused)
+    void TaskHCSR04(void *pv){
+        def returnValue = 0;
+        
+        /// Calculate polling interval (5% of total interval)
+        const uint32_t pollTick = pdMS_TO_TICKS((HCSR04_MEASURE_INTERVAL / 1000) * __EST_POOL_CHECK_PERCENT);
+
+        /// Initialize Soft Timer
+        espSoftTimer_t hcsr04Timer;
+        espSoftTimerInit(&hcsr04Timer, HCSR04_MEASURE_INTERVAL);
+
+        /// Setup pins
+        hcsr04Dev.T0 = hcsr04Dev.T1 = hcsr04Dev.T2 = hcsr04Dev.T3 = HCSR04_C_PIN;
+        hcsr04Dev.E0 = HCSR04_0_PIN;    hcsr04Dev.E2 = HCSR04_2_PIN;
+        hcsr04Dev.E1 = HCSR04_1_PIN;    hcsr04Dev.E3 = HCSR04_3_PIN;
+        hcsr04Init();
+
+        while(1){
+            /// 1. Execute Work
+            returnValue = hcsr04MeasureAll();
+            
+            if(returnValue != STATUS_OKE) 
+                __sys_err("[TaskHCSR04] hcsr04MeasureAll(): %s", DEFAULT_RETURN_STATUS_STR(returnValue));
+            
+            __sys_log("[TaskHCSR04] F:%d R:%d B:%d L:%d", 
+                        hcsr04Data.arr[0], hcsr04Data.arr[1],
+                        hcsr04Data.arr[2], hcsr04Data.arr[3]);
+
+            /// 2. Wait logic: Pool check until timeout, then auto-reset
+            while (!estIsTimeOutAndReset(&hcsr04Timer)) {
+                /// Sleep for 5% interval
+                vTaskDelay(pollTick);
+            }
         }
     }
 #endif /// (SENSOR_HCSR04_EN == 1)
 
 #if (SENSOR_MPU6050_EN == 1)
+    /// @brief Task to handle MPU6050 with precise timing
+    /// @param pv Task parameters (unused)
     void TaskMPU6050(void *pv){
         __entry("TaskMPU6050()");
+
+        /// Calculate polling interval (5% of total interval)
+        const uint32_t pollTick = pdMS_TO_TICKS((MPU6050_MEASURE_INTERVAL / 1000) * __EST_POOL_CHECK_PERCENT);
+
+        /// Initialize Soft Timer
+        espSoftTimer_t mpuTimer;
+        espSoftTimerInit(&mpuTimer, MPU6050_MEASURE_INTERVAL);
 
         // Init MPU6050
         if (mpu6050Init() != STATUS_OKE) {
@@ -90,12 +154,20 @@
         } else {
             __sys_log("[TaskMPU6050] "  "MPU6050 connected successfully.");
         }
+        
         // Main loop
         while (1) {
+            /// 1. Execute Work
             mpu6050Measure();
+            
             __sys_log("[TaskMPU6050] a[x: %d, y: %d, z: %d] g[x: %d, y: %d, z: %d]", 
                     mpuData.ax, mpuData.ay, mpuData.az, mpuData.gx, mpuData.gy, mpuData.gz);
-            vTaskDelay(pdMS_TO_TICKS(350));
+            
+            /// 2. Wait logic: Pool check until timeout, then auto-reset
+            while (!estIsTimeOutAndReset(&mpuTimer)) {
+                /// Sleep for 5% interval
+                vTaskDelay(pollTick);
+            }
         }
 
         __exit("TaskMPU6050()");
@@ -114,10 +186,13 @@
     }
 #endif
 
-/// @brief Main Task for ATGM336H GPS Module
+/// @brief Main Task for ATGM336H GPS Module with SoftTimer and PPS Bypass
 /// @param pv Task parameters (unused)
 void TaskATGM336H(void* pv){
     __sys_log("[TaskATGM336H] Task Started. UART%d @%d", GPS_SERIAL_NUM, GPS_BAUD);
+
+    /// Calculate polling interval (5% of total interval)
+    const uint32_t pollTick = pdMS_TO_TICKS((GPS_MEASURE_INTERVAL / 1000) * __EST_POOL_CHECK_PERCENT);
 
     /// 1. Initialize UART
     gpsSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
@@ -128,19 +203,25 @@ void TaskATGM336H(void* pv){
         attachInterrupt(digitalPinToInterrupt(GPS_PPS_PIN), gpsPpsIsr, RISING);
     #endif
 
-    uint32_t lastRxTime = millis();
+    /// Initialize Soft Timer for Loop Cycle
+    espSoftTimer_t gpsCycleTimer;
+    espSoftTimerInit(&gpsCycleTimer, GPS_MEASURE_INTERVAL);
+
+    /// Initialize Soft Timer for Rx Timeout (5 seconds)
+    espSoftTimer_t rxTimeoutTimer;
+    espSoftTimerInit(&rxTimeoutTimer, 5000000); 
 
     for(;;) {
-        /// 3. Parse NMEA data from UART
+        /// 3. Parse NMEA data from UART (Work Phase)
         while (gpsSerial.available()) {
             gpsDevice.encode(gpsSerial.read());
-            lastRxTime = millis(); // Update RX timestamp
+            /// Reset timeout timer whenever valid data stream is active
+            estResetTimer(&rxTimeoutTimer);
         }
 
-        /// 3.1 Check for hardware timeout (No data for 5 seconds)
-        if (millis() - lastRxTime > 5000) {
+        /// 3.1 Check for hardware timeout
+        if (estIsTimeOutAndReset(&rxTimeoutTimer)) {
             __sys_err("[TaskATGM336H] Timeout! No data received for 5s. Check wiring RX/TX!");
-            lastRxTime = millis(); // Reset to avoid spamming error log
         }
 
         /// 4. Check & Update Date/Time
@@ -155,7 +236,6 @@ void TaskATGM336H(void* pv){
                 
                 gpsSetUpdateFlag(GPS_UPDATA_DATE_TIME);
             } else {
-                /// Log error if NMEA sentence received but data is garbage
                 __sys_err("[TaskATGM336H] Date/Time updated but INVALID.");
             }
         }
@@ -166,14 +246,12 @@ void TaskATGM336H(void* pv){
                 gpsData.latitude  = gpsDevice.location.lat();
                 gpsData.longitude = gpsDevice.location.lng();
                 
-                /// Update speed here as it usually comes with location
                 if (gpsDevice.speed.isValid()) {
                     gpsData.speed_kmh = gpsDevice.speed.kmph();
                 }
 
                 gpsSetUpdateFlag(GPS_UPDATA_LOCATION);
             } else {
-                /// Log error, usually means 'V' (Void) status in NMEA (No GPS Fix yet)
                 __sys_err("[TaskATGM336H] Location updated but INVALID (No Fix).");
             }
         }
@@ -182,27 +260,31 @@ void TaskATGM336H(void* pv){
         if (gpsDevice.satellites.isUpdated()) {
             if (gpsDevice.satellites.isValid()) {
                 gpsData.sats = gpsDevice.satellites.value();
-                
                 gpsSetUpdateFlag(GPS_UPDATA_OTHERS);
             } else {
                  __sys_err("[TaskATGM336H] Sats count updated but INVALID.");
             }
         }
 
-        /// 7. Handle PPS (Optional logic from old task)
-        #if (GPS_PPS_EN == 1)
-            if (gpsUpdateDataNow) {
-                gpsUpdateDataNow = false;
-                /// PPS handling logic here (if needed)
-            }
-        #endif
-
-        /// 8. Yield to other tasks
-        vTaskDelay(pdMS_TO_TICKS(10));
+        /// 7. Wait logic: Pool check until timeout OR PPS triggers
+        while (!estIsTimeOutAndReset(&gpsCycleTimer)) {
+            
+            #if (GPS_PPS_EN == 1)
+                /// Priority Bypass: If PPS triggers, break wait loop immediately to update data
+                if (gpsUpdateDataNow) {
+                    gpsUpdateDataNow = false;
+                    /// Reset timer manually to start new cycle immediately from this point
+                    estResetTimer(&gpsCycleTimer);
+                    break; 
+                }
+            #endif
+            
+            /// Sleep for 5% interval
+            vTaskDelay(pollTick);
+        }
     }
     
     vTaskDelete(NULL);
 }
 
 #endif /// (SENSOR_ATGM336H_EN == 1)
-

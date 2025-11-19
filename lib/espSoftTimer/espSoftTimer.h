@@ -86,4 +86,6 @@ static inline void estResetTimer(espSoftTimer_t *td) {
         __VA_ARGS__; \
     }
 
+#define __EST_POOL_CHECK_PERCENT    0.05
+
 #endif // __ESP_SOFT_TIMER_H__
