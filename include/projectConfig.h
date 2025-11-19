@@ -25,9 +25,9 @@
 /// CONFIG | COMPONENTS ///////////////////////////////////////////////////////////////////////////
 
 #define LIGHT_TICK_EN           1
-#define FIREBASE_SYNC_EN        0
+#define FIREBASE_SYNC_EN        1
 #define SENSOR_HCSR04_EN        0
-#define SENSOR_MPU6050_EN       0
+#define SENSOR_MPU6050_EN       1
 #define SENSOR_ATGM336H_EN      1
 #define LAN_DATA_EXCHANGE_EN    1
 
@@ -41,6 +41,8 @@
 #endif /// (LIGHT_TICK_EN == 1)
 
 #if (SENSOR_MPU6050_EN == 1)
+    #define MPU6050_SCL 22
+    #define MPU6050_SDA 21
     #define MPU6050_MEASURE_INTERVAL 350000          /// micro-sec
 #endif
 

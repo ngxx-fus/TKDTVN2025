@@ -1,3 +1,6 @@
+#include "../../include/projectConfig.h"
+#if (SENSOR_MPU6050_EN == 1)
+
 #ifndef __MPU6050_WRAP_H__
 #define __MPU6050_WRAP_H__
 
@@ -32,15 +35,23 @@ extern mpu6050Data_t mpuData;
 
 static inline def mpu6050Init(){
     __entry("mpu6050Init()");
-    /// Initial I2C
-    Wire.begin();
-    vTaskDelay(pdMS_TO_TICKS(100));
-    /// Initial MPU6050
-    mpuDev.initialize();
-    if (!mpuDev.testConnection()) {
-        __exit("mpu6050Init() : SYS_STATUS_ERR__INIT_FAILED");
-        return STATUS_ERR_INIT_FAILED;
+    int i = 1000;
+    while(--i){
+        /// Initial I2C with specific pins (GPIO 21, GPIO 22)
+        Wire.begin(MPU6050_SDA, MPU6050_SCL);
+        /// Wait for I2C bus to stabilize
+        vTaskDelay(pdMS_TO_TICKS(100));
+        /// Initial MPU6050
+        mpuDev.initialize();
+        if (!mpuDev.testConnection()) {
+            __exit("mpu6050Init() : SYS_STATUS_ERR_INIT_FAILED");
+        }else{
+            goto RETURN_OKE;
+        }
+        delay(100);
     }
+    return STATUS_ERR_INIT_FAILED;
+    RETURN_OKE:
     __exit("mpu6050Init() : OKE");
     return STATUS_OKE;
 }
@@ -62,3 +73,5 @@ static inline void mpu6050Measure(){
 
 
 #endif
+
+#endif /// (SENSOR_MPU6050_EN==1)
