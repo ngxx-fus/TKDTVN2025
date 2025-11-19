@@ -25,34 +25,19 @@
 /// CONFIG | COMPONENTS ///////////////////////////////////////////////////////////////////////////
 
 #define LIGHT_TICK_EN           1
-#define FIREBASE_SYNC_EN        1
+#define FIREBASE_SYNC_EN        0
 #define SENSOR_HCSR04_EN        0
 #define SENSOR_MPU6050_EN       0
 #define SENSOR_ATGM336H_EN      1
+#define LAN_DATA_EXCHANGE_EN    1
 
 /// CONFIG | COMPONENTS | DETAILS /////////////////////////////////////////////////////////////////
 
-#if (FIREBASE_SYNC_EN == 1)
-    #define FBRTDB_URL              "https://tkdtvn2025-default-rtdb.asia-southeast1.firebasedatabase.app/"
-    #define FB_API_KEY              "AIzaSyBC-o4n9PbYDeWlKkxo-Jogn7EhwA96MZ8"
-    #define FB_USER_EMAIL           "huu-nam-3204@tkdtvn2025.iam.gserviceaccount.com"/// "nthanhphu.k22.hcmute@gmail.com"
-    #define FB_USER_PASSWORD        "@asjd2361qeuFASl:kHJDASsn#wer"
-    #define WIFI_SSID               "VEDC2025_LUX_TEAM"
-    #define WIFI_PASSWORD           "VEDC2025_LUX_TEAM"
-
-    #define FBRTDB_ROOT_PATH        "/"
-    #define FBRTDB_MPU6050_PATH     FBRTDB_ROOT_PATH "mpu6050/"
-    #define FBRTDB_HCSR04_PATH      FBRTDB_ROOT_PATH "hcrs04/"
-    #define FBRTDB_ATGM336H_PATH    FBRTDB_ROOT_PATH "atgm336h/"
-
-    #define FB_SYNC_DELAY           5000000 /// In micro-sec
-#endif /// (FIREBASE_SYNC_EN == 1)
-
 #if (LIGHT_TICK_EN == 1)
     #define LIGHT_TICK_PIN          19
-    #define LIGHT_TICK_TIME_ON      50
+    #define LIGHT_TICK_TIME_ON      100
     #define LIGHT_TICK_TIME_OFF     50
-    #define LIGHT_TICK_CYCLIC_PATTERN "101010000000000000000000"
+    #define LIGHT_TICK_CYCLIC_PATTERN "10100100000000000000000"
 #endif /// (LIGHT_TICK_EN == 1)
 
 #if (SENSOR_MPU6050_EN == 1)
@@ -81,5 +66,27 @@
     #define GPS_SERIAL_NUM          2
     #define GPS_MEASURE_INTERVAL    1000000
 #endif  /// (SENSOR_ATGM336H_EN == 1)
+
+#if (LAN_DATA_EXCHANGE_EN == 1)
+    #define ELDE_RX_BUF_SIZE        255
+#endif /// (LAN_DATA_EXCHANGE_EN == 1)
+
+#if (FIREBASE_SYNC_EN == 1)
+    #define FBRTDB_URL              "https://tkdtvn2025-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    #define FB_API_KEY              "AIzaSyBC-o4n9PbYDeWlKkxo-Jogn7EhwA96MZ8"
+    #define FB_USER_EMAIL           "huu-nam-3204@tkdtvn2025.iam.gserviceaccount.com"/// "nthanhphu.k22.hcmute@gmail.com"
+    #define FB_USER_PASSWORD        "@asjd2361qeuFASl:kHJDASsn#wer"
+    #define FBRTDB_ROOT_PATH        "/"
+    #define FBRTDB_MPU6050_PATH     FBRTDB_ROOT_PATH "mpu6050/"
+    #define FBRTDB_HCSR04_PATH      FBRTDB_ROOT_PATH "hcrs04/"
+    #define FBRTDB_ATGM336H_PATH    FBRTDB_ROOT_PATH "atgm336h/"
+
+    #define FB_SYNC_DELAY           5000000 /// In micro-sec
+#endif /// (FIREBASE_SYNC_EN == 1)
+
+#if (LAN_DATA_EXCHANGE_EN == 1) ||  (FIREBASE_SYNC_EN == 1)
+    #define WIFI_SSID               "VEDC2025_LUX_TEAM"
+    #define WIFI_PASSWORD           "VEDC2025_LUX_TEAM"
+#endif /// (LAN_DATA_EXCHANGE_EN == 1) ||  (FIREBASE_SYNC_EN == 1)
 
 #endif  /// __PROJECT_CONFIG_H__

@@ -29,9 +29,16 @@ void setup(){
         xTaskCreate(TaskATGM336H, "TaskATGM336H", 2048, NULL, 1, NULL);
     #endif
 
+    #if (LAN_DATA_EXCHANGE_EN == 1) || (FIREBASE_SYNC_EN == 1)
+        wfInit();
+    #endif
+
+    #if (LAN_DATA_EXCHANGE_EN == 1)
+        __sys_log("[setup] [+] Add TaskLANDataExchange");
+        xTaskCreatePinnedToCore(TaskLANDataExchange, "TaskLANDataExchange", 8192, NULL, 1, NULL, 0);
+    #endif
 
     #if (FIREBASE_SYNC_EN == 1)
-        wfInit();
         fbInit();
         __sys_log("[setup] [+] Add TaskFirebaseSync");
         xTaskCreatePinnedToCore(TaskFirebaseSync, "TaskFirebaseSync", 8192, NULL, 1, NULL, 1);

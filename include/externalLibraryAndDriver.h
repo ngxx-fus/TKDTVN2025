@@ -14,12 +14,16 @@
     #include "../lib/HCSR04Wrap/HCSR04Wrap.h"
 #endif
 
+#if (SENSOR_ATGM336H_EN == 1)
+    #include "../lib/atgm336hWrap/atgm336hWrap.h"
+#endif
+
 #if (FIREBASE_SYNC_EN == 1)
     #include "../lib/FirebaseWrap/FirebaseWrap.h"
 #endif
 
-#if (SENSOR_ATGM336H_EN == 1)
-    #include "../lib/atgm336hWrap/atgm336hWrap.h"
+#if (LAN_DATA_EXCHANGE_EN == 1)
+    #include "../lib/espLANDataExchange/espLANDataExchange.h"
 #endif
 
 #endif

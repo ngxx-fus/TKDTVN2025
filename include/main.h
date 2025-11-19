@@ -1,6 +1,7 @@
 /// #pragma message("[include] main.h")
 
 #include "Arduino.h"
+#include <string.h>
 
 #include "localHelperAndUtil.h"
 #include "externalLibraryAndDriver.h"
@@ -38,28 +39,6 @@
     }
 #endif /// (LIGHT_TICK_EN == 1)
 
-#if (FIREBASE_SYNC_EN == 1)
-    void TaskFirebaseSync(void* pv){
-        __entry("TaskFirebaseSync()");
-        espSoftTimer_t st;
-        espSoftTimerInit(&st, FB_SYNC_DELAY);
-        while(1){
-            #if (SENSOR_HCSR04_EN == 1)
-                if(fbUploadHCSR04Data()!=STATUS_OKE) __sys_log("[Task04] [fbUploadHCSR04Data] failed!");
-            #endif /// (SENSOR_HCSR04_EN == 1)
-            #if (SENSOR_MPU6050_EN == 1)
-                if(fbUploadMPU6050Data()!=STATUS_OKE) __sys_log("[Task04] [fbUploadMPU6050Data] failed!");
-            #endif /// (SENSOR_MPU6050_EN == 1)
-            #if (SENSOR_ATGM336H_EN == 1)
-                if(fbUploadATGM336HData()!=STATUS_OKE) __sys_log("[Task04] [fbUploadATGM336HData] failed!");
-            #endif /// (SENSOR_ATGM336H_EN == 1)
-
-            __EST_WAIT_AND_RESET_EXEC(&st, vTaskDelay(1));
-        }
-        __exit("TaskFirebaseSync()");
-    }
-#endif /// (FIREBASE_SYNC_EN == 1)
-
 #if (SENSOR_HCSR04_EN == 1)
     /// @brief Task to handle HC-SR04 Ultrasonic Sensor measurements
     /// @param pv Task parameters (unused)
@@ -92,8 +71,6 @@
         }
     }
 #endif /// (SENSOR_HCSR04_EN == 1)
-
-#include "espSoftTimer.h"
 
 #if (SENSOR_HCSR04_EN == 1)
     /// @brief Task to handle HC-SR04 Ultrasonic Sensor measurements with precise timing
@@ -288,3 +265,103 @@ void TaskATGM336H(void* pv){
 }
 
 #endif /// (SENSOR_ATGM336H_EN == 1)
+
+#if (FIREBASE_SYNC_EN == 1) || (LAN_DATA_EXCHANGE_EN == 1) 
+    // void taskWiFiFrequencyCheck(void* pv){
+    //     eldeUpdateSelfIP();
+    // }
+
+#endif 
+
+#if (FIREBASE_SYNC_EN == 1)
+    void TaskFirebaseSync(void* pv){
+        __entry("TaskFirebaseSync()");
+        espSoftTimer_t st;
+        espSoftTimerInit(&st, FB_SYNC_DELAY);
+        while(1){
+            #if (SENSOR_HCSR04_EN == 1)
+                if(fbUploadHCSR04Data()!=STATUS_OKE) __sys_log("[Task04] [fbUploadHCSR04Data] failed!");
+            #endif /// (SENSOR_HCSR04_EN == 1)
+            #if (SENSOR_MPU6050_EN == 1)
+                if(fbUploadMPU6050Data()!=STATUS_OKE) __sys_log("[Task04] [fbUploadMPU6050Data] failed!");
+            #endif /// (SENSOR_MPU6050_EN == 1)
+            #if (SENSOR_ATGM336H_EN == 1)
+                if(fbUploadATGM336HData()!=STATUS_OKE) __sys_log("[Task04] [fbUploadATGM336HData] failed!");
+            #endif /// (SENSOR_ATGM336H_EN == 1)
+
+            __EST_WAIT_AND_RESET_EXEC(&st, vTaskDelay(1));
+        }
+        __exit("TaskFirebaseSync()");
+    }
+#endif /// (FIREBASE_SYNC_EN == 1)
+
+#if (LAN_DATA_EXCHANGE_EN == 1)
+
+/// @brief Task to exchange data with PC via UDP
+/// @param pv Task parameters
+void TaskLANDataExchange(void* pv) {
+    espLANHost_t pcHost;
+    pcHost.hostName = "WindowsHost";
+    pcHost.ip       = "192.168.2.165"; // Update your PC IP here
+    pcHost.port.udp = 4210;
+    pcHost.port.tcp = 4211;
+
+    /// 1. Wait for WiFi connection
+    while (WiFi.status() != WL_CONNECTED) {
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+
+    /// 2. Initialize LAN Exchange Library
+    if (eldeInit() != STATUS_OKE) {
+        __sys_err("[TaskLANDataExchange] ELDE Init Failed!");
+    } else {
+        __sys_log("[TaskLANDataExchange] ELDE Init Success! Listening on %d", thisESP.port.udp);
+    }
+
+    /// Define Protocol Constants
+    const char* FRAME_START = "ATGM336H_START";
+    const char* FRAME_STOP  = "ATGM336H_STOP";
+    const size_t HEADER_LEN = strlen(FRAME_START);
+    const size_t DATA_LEN   = sizeof(atgm336hData_t); // 20 bytes
+    const size_t FOOTER_LEN = strlen(FRAME_STOP);
+    
+    /// Buffer size = Header + Data + Footer
+    uint8_t txBuffer[64]; 
+
+    while (1) {
+        // --- SEND DATA (TX) ---
+        
+        /// Check if GPS struct size is correct (Safety check)
+        if (DATA_LEN == 20) {
+            /// 1. Copy Header
+            memcpy(txBuffer, FRAME_START, HEADER_LEN);
+            
+            /// 2. Copy Raw Struct Data (from global gpsData)
+            memcpy(txBuffer + HEADER_LEN, gpsData.arr, DATA_LEN);
+            
+            /// 3. Copy Footer
+            memcpy(txBuffer + HEADER_LEN + DATA_LEN, FRAME_STOP, FOOTER_LEN);
+
+            /// 4. Send UDP Packet
+            def ret = espUDPSendByteArr(&pcHost, txBuffer, HEADER_LEN + DATA_LEN + FOOTER_LEN);
+            
+            if (ret == STATUS_OKE) {
+                // __sys_log("[TaskLANDataExchange] Sent GPS Frame (%d bytes)", HEADER_LEN + DATA_LEN + FOOTER_LEN);
+            }
+        }
+
+        // --- RECEIVE DATA (RX) ---
+        eldePoll(); 
+
+        uint8_t rxBuf[128];
+        def len = espUDPReceiveByteArr(rxBuf, 128);
+        if (len > 0 && len != STATUS_ERR) {
+            rxBuf[len] = 0; // Null-terminate
+            __sys_log("[TaskLANDataExchange] Recv from PC: %s", (char*)rxBuf);
+        }
+
+        /// Delay 100ms (10Hz update rate)
+        vTaskDelay(pdMS_TO_TICKS(100)); 
+    }
+}
+#endif /// (LAN_DATA_EXCHANGE_EN == 1)

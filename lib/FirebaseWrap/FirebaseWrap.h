@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include "../espSerialWrap/espSerialWrap.h"
+#include "../espSoftTimer/espSoftTimer.h"
 #include "../cReturnType/cReturnType.h"
 #include "../MPU6050Wrap/MPU6050Wrap.h"
 #include "../HCSR04Wrap/HCSR04Wrap.h"
