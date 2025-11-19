@@ -1,0 +1,39 @@
+<mxfile host="65bd71144e">
+    <diagram id="T8aEeQcCGhaW5iZQT9AI" name="Page-1">
+        <mxGraphModel dx="914" dy="550" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="3" value="ID&lt;br&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;0000B&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;...&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;1111B&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="210" y="70" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="LEN&lt;br&gt;&lt;div&gt;&lt;font color=&quot;#000000&quot;&gt;0001B&lt;/font&gt;&lt;/div&gt;&lt;div&gt;...&lt;/div&gt;&lt;div&gt;1110B&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="70" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="DATA&lt;sub&gt;0&lt;/sub&gt;&lt;br&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(0, 0, 0); background-color: transparent;&quot;&gt;XXXX_XXXXB&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="70" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="DATA&lt;sub&gt;N (max:15)&lt;/sub&gt;&lt;br&gt;&lt;div&gt;&lt;span style=&quot;color: rgb(0, 0, 0); background-color: transparent;&quot;&gt;XXXX_XXXXB&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="70" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="CRC&lt;br&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251);&quot;&gt;XXXX_XXXX_XXXX_XXXXB&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="70" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;BREAK&lt;/span&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251);&quot;&gt;11111111&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="810" y="70" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="START&lt;br&gt;&lt;div style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251);&quot;&gt;00000000&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="70" width="120" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="2xUfKib_nYfxIz3w5lgD" name="Page-2">
+        <mxGraphModel dx="1326" dy="797" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
