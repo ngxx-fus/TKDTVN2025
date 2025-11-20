@@ -27,53 +27,52 @@ espLANHost_t thisESP = {
     }
 };
 
-// #ifndef wfInit_function
-//     #define wfInit_function
-//     void wfInit(){
-//         /// Define wait intervals (microseconds)
-//         const int64_t SHORT_WAIT   = 2000000;   /// 2s
-//         const int64_t MEDIUM_WAIT  = 60000000;  /// 1 min
-//         const int64_t LONG_WAIT    = 600000000; /// 10 min
+#if (FIREBASE_SYNC_EN == 0)
+    void wfInit(){
+        /// Define wait intervals (microseconds)
+        const int64_t SHORT_WAIT   = 2000000;   /// 2s
+        const int64_t MEDIUM_WAIT  = 60000000;  /// 1 min
+        const int64_t LONG_WAIT    = 600000000; /// 10 min
 
-//         int attemptCount = 0; 
-//         int64_t waitTimeUs = 0;
-//         espSoftTimer_t wfTimer;
+        int attemptCount = 0; 
+        int64_t waitTimeUs = 0;
+        espSoftTimer_t wfTimer;
 
-//         WiFi.mode(WIFI_STA);
-//         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-//         /// Loop until connected
-//         while(WiFi.status() != WL_CONNECTED){
-//             attemptCount++;
+        /// Loop until connected
+        while(WiFi.status() != WL_CONNECTED){
+            attemptCount++;
             
-//             /// Calculate backoff time based on attempt count
-//             if(attemptCount < 10){
-//                 waitTimeUs = SHORT_WAIT;    // Retries 1-10: 2s
-//             } else if(attemptCount < 20){
-//                 waitTimeUs = MEDIUM_WAIT;   // Retries 11-20: 1 min
-//             } else {
-//                 waitTimeUs = LONG_WAIT;     // Retries 20+: 10 min
-//             }
+            /// Calculate backoff time based on attempt count
+            if(attemptCount < 10){
+                waitTimeUs = SHORT_WAIT;    // Retries 1-10: 2s
+            } else if(attemptCount < 20){
+                waitTimeUs = MEDIUM_WAIT;   // Retries 11-20: 1 min
+            } else {
+                waitTimeUs = LONG_WAIT;     // Retries 20+: 10 min
+            }
 
-//             __sys_log("[wfInit] Connecting to Wi-fi... (Attempt: %d, Wait: %ds)", 
-//                     attemptCount, (int)(waitTimeUs/1000000));
+            __sys_log("[wfInit] Connecting to Wi-fi... (Attempt: %d, Wait: %ds)", 
+                    attemptCount, (int)(waitTimeUs/1000000));
             
-//             /// Initialize timer
-//             espSoftTimerInit(&wfTimer, waitTimeUs);
+            /// Initialize timer
+            espSoftTimerInit(&wfTimer, waitTimeUs);
 
-//             /// Safe Wait: Yields to OS while waiting
-//             __EST_WAIT_EXEC(&wfTimer, vTaskDelay(pdMS_TO_TICKS(100)));
+            /// Safe Wait: Yields to OS while waiting
+            __EST_WAIT_EXEC(&wfTimer, vTaskDelay(pdMS_TO_TICKS(100)));
             
-//             /// Hard Retry: Re-trigger connection logic if stuck too long
-//             if (attemptCount % 20 == 0) {
-//                 WiFi.disconnect();
-//                 WiFi.reconnect();
-//             }
-//         }
-//         __sys_log("[wfInit] Connected to Wi-fi!");
-//         __sys_log("[wfInit] IP Address: %s", WiFi.localIP().toString().c_str());
-//     }
-// #endif /// wfInit
+            /// Hard Retry: Re-trigger connection logic if stuck too long
+            if (attemptCount % 20 == 0) {
+                WiFi.disconnect();
+                WiFi.reconnect();
+            }
+        }
+        __sys_log("[wfInit] Connected to Wi-fi!");
+        __sys_log("[wfInit] IP Address: %s", WiFi.localIP().toString().c_str());
+    }
+#endif /// (FIREBASE_SYNC_EN == 0)
 
 /// Update thisESP.ip with current WiFi local IP
 void eldeUpdateSelfIP() {

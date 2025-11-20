@@ -43,14 +43,13 @@ static inline def mpu6050Init(){
         vTaskDelay(pdMS_TO_TICKS(100));
         /// Initial MPU6050
         mpuDev.initialize();
-        if (!mpuDev.testConnection()) {
-            __exit("mpu6050Init() : SYS_STATUS_ERR_INIT_FAILED");
-        }else{
+        if (mpuDev.testConnection()) {
             goto RETURN_OKE;
         }
-        delay(100);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
     return STATUS_ERR_INIT_FAILED;
+    __exit("mpu6050Init() : SYS_STATUS_ERR_INIT_FAILED");
     RETURN_OKE:
     __exit("mpu6050Init() : OKE");
     return STATUS_OKE;
