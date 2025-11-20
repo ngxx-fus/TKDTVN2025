@@ -1,0 +1,102 @@
+6109672 HEAD@{0}: checkout: moving from HM to release
+395c4b9 HEAD@{1}: reset: moving to 395c4b9
+6109672 HEAD@{2}: reset: moving to release
+395c4b9 HEAD@{3}: checkout: moving from HA to HM
+2a04590 HEAD@{4}: reset: moving to HEAD
+2a04590 HEAD@{5}: rebase (abort): returning to refs/heads/HA
+395c4b9 HEAD@{6}: reset: moving to HEAD
+395c4b9 HEAD@{7}: reset: moving to HEAD
+395c4b9 HEAD@{8}: checkout: moving from release to HM
+6109672 HEAD@{9}: checkout: moving from HM to release
+395c4b9 HEAD@{10}: pull: Fast-forward
+44b94e5 HEAD@{11}: reset: moving to HEAD
+44b94e5 HEAD@{12}: checkout: moving from HM-01 to HM
+9ad9bfb HEAD@{13}: checkout: moving from HM to HM-01
+44b94e5 HEAD@{14}: checkout: moving from HM-01 to HM
+9ad9bfb HEAD@{15}: checkout: moving from HM to HM-01
+44b94e5 HEAD@{16}: pull: Fast-forward
+2a04590 HEAD@{17}: reset: moving to HEAD
+2a04590 HEAD@{18}: checkout: moving from base to HM
+587be1f HEAD@{19}: pull: Fast-forward
+9089e28 HEAD@{20}: reset: moving to HEAD
+9089e28 HEAD@{21}: checkout: moving from HM to base
+2a04590 HEAD@{22}: checkout: moving from 6f8a01cbde9a401153ac26add2af670d0ba17c13 to HM
+6f8a01c HEAD@{23}: pull (pick): add flowchart
+d48317c HEAD@{24}: pull (start): checkout d48317c79e66056f83299961026d26742c02047d
+2a04590 HEAD@{25}: reset: moving to HEAD
+2a04590 HEAD@{26}: merge HM: Fast-forward
+3338140 HEAD@{27}: checkout: moving from HM to HA
+2a04590 HEAD@{28}: commit: changed
+3f510bc HEAD@{29}: commit: changed
+17d3073 HEAD@{30}: commit (merge): Merge branch 'HA' into HM
+3f851b2 HEAD@{31}: commit: changed
+5baa37c HEAD@{32}: commit: add flowchart
+9089e28 HEAD@{33}: checkout: moving from HA to HM
+3338140 HEAD@{34}: pull --no-rebase: Merge made by the 'ort' strategy.
+c6ccc64 HEAD@{35}: commit: wrap mpu6050
+32183f7 HEAD@{36}: commit: add lib/cSafeComunicate/
+9999941 HEAD@{37}: checkout: moving from GB to HA
+570917f HEAD@{38}: pull: Fast-forward
+9089e28 HEAD@{39}: checkout: moving from HM to GB
+9089e28 HEAD@{40}: merge base: Fast-forward
+367b66b HEAD@{41}: checkout: moving from GB to HM
+9089e28 HEAD@{42}: merge base: Fast-forward
+76daddd HEAD@{43}: checkout: moving from base to GB
+9089e28 HEAD@{44}: commit: changed Getting...
+0b2e51d HEAD@{45}: pull: Fast-forward
+76daddd HEAD@{46}: reset: moving to HEAD
+76daddd HEAD@{47}: reset: moving to HEAD
+76daddd HEAD@{48}: checkout: moving from base to base
+76daddd HEAD@{49}: checkout: moving from GB to base
+76daddd HEAD@{50}: checkout: moving from base to GB
+76daddd HEAD@{51}: commit: change GettingStarted
+b89ebcb HEAD@{52}: pull (finish): returning to refs/heads/base
+b89ebcb HEAD@{53}: pull (pick): change GettingStarted
+9d36766 HEAD@{54}: pull (start): checkout 9d36766151486aaf25e585aad4293c1248014208
+04db975 HEAD@{55}: commit: change GettingStarted
+367b66b HEAD@{56}: merge HM: Fast-forward
+5abace8 HEAD@{57}: checkout: moving from HM to base
+367b66b HEAD@{58}: commit: changed
+5abace8 HEAD@{59}: merge base: Fast-forward
+b19154a HEAD@{60}: checkout: moving from base to HM
+5abace8 HEAD@{61}: commit: changed
+8534e05 HEAD@{62}: commit: Add gettingStarted
+799e495 HEAD@{63}: commit: Change comment on Task03; Change .gitignore;
+a785fbb HEAD@{64}: checkout: moving from HM to base
+b19154a HEAD@{65}: checkout: moving from base to HM
+a785fbb HEAD@{66}: merge HM: Merge made by the 'ort' strategy.
+9999941 HEAD@{67}: checkout: moving from HM to base
+b19154a HEAD@{68}: commit: add note
+f0e745e HEAD@{69}: checkout: moving from HA to HM
+9999941 HEAD@{70}: merge base: Fast-forward
+32e0b31 HEAD@{71}: checkout: moving from base to HA
+9999941 HEAD@{72}: merge HM: Merge made by the 'ort' strategy.
+55108e0 HEAD@{73}: pull: Fast-forward
+47ea247 HEAD@{74}: checkout: moving from HM to base
+f0e745e HEAD@{75}: commit: changed
+2c44783 HEAD@{76}: commit: add Task03
+510b361 HEAD@{77}: commit: add MPU6050
+d3d08c1 HEAD@{78}: commit: add semaphore
+32e0b31 HEAD@{79}: merge HA: Fast-forward
+dcdc45b HEAD@{80}: checkout: moving from HA to HM
+32e0b31 HEAD@{81}: commit: update
+dcdc45b HEAD@{82}: merge HM: Fast-forward
+716bd93 HEAD@{83}: checkout: moving from HM to HA
+dcdc45b HEAD@{84}: commit: Add task01, task02 for freeRTOS sample
+ab03108 HEAD@{85}: commit: changed
+af36b62 HEAD@{86}: commit: add esp-idf function wrapper
+47ea247 HEAD@{87}: merge base: Fast-forward
+e15bac3 HEAD@{88}: checkout: moving from base to HM
+47ea247 HEAD@{89}: rebase (finish): returning to refs/heads/base
+47ea247 HEAD@{90}: commit (amend): changed
+89d533b HEAD@{91}: commit: changed
+c4bf7b8 HEAD@{92}: pull (start): checkout c4bf7b8b10f9e0b9344e7f07c414cb472d34f4e7
+8fcc4a2 HEAD@{93}: commit: add some files for sim
+38086fa HEAD@{94}: reset: moving to HEAD
+38086fa HEAD@{95}: pull (finish): returning to refs/heads/base
+38086fa HEAD@{96}: pull (pick): add essential header
+83e2233 HEAD@{97}: pull (start): checkout 83e22338d326f939fb6769c5c17657e37da03b07
+054bf09 HEAD@{98}: commit: add essential header
+246bdc0 HEAD@{99}: commit: add cutil
+012aef0 HEAD@{100}: commit: add startpoint
+72e75b2 HEAD@{101}: clone: from https://github.com/ngxx-fus/TKDTVN2025
