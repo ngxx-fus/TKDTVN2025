@@ -27,7 +27,7 @@
 #define LIGHT_TICK_EN           1
 #define FIREBASE_SYNC_EN        1
 #define SENSOR_HCSR04_EN        0
-#define SENSOR_MPU6050_EN       0
+#define SENSOR_MPU6050_EN       1
 #define SENSOR_ATGM336H_EN      1
 #define LAN_DATA_EXCHANGE_EN    1
 
@@ -60,8 +60,8 @@
 
 #if (SENSOR_ATGM336H_EN == 1)
     #define SENSOR_GPS_EN           1
-    #define GPS_RX_PIN              33
-    #define GPS_TX_PIN              32
+    #define GPS_RX_PIN              33  /// (TX ON ATGM336H)
+    #define GPS_TX_PIN              32  /// (RX ON ATGM336H)
     #define GPS_BAUD                9600
     #define GPS_PPS_EN              0
     #define GPS_PPS_PIN             35

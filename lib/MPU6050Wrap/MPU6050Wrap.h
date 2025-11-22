@@ -37,8 +37,9 @@ static inline def mpu6050Init(){
     __entry("mpu6050Init()");
     int i = 1000;
     while(--i){
+        __sys_log("[mpu6050Init] Init MPU6050 ...");
         /// Initial I2C with specific pins (GPIO 21, GPIO 22)
-        Wire.begin(MPU6050_SDA, MPU6050_SCL);
+        Wire.begin(MPU6050_SDA, MPU6050_SCL, 1000);
         /// Wait for I2C bus to stabilize
         vTaskDelay(pdMS_TO_TICKS(100));
         /// Initial MPU6050
