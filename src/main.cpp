@@ -31,11 +31,15 @@ void setup(){
 
     #if (LAN_DATA_EXCHANGE_EN == 1) || (FIREBASE_SYNC_EN == 1)
         wfInit();
+        __sys_log("[setup] [+] Add TaskWiFiFrequentlyCheck");
+        xTaskCreatePinnedToCore(TaskWiFiFrequentlyCheck, "TaskWiFiFrequentlyCheck", 2048, NULL, 1, NULL, 0);
     #endif
 
     #if (LAN_DATA_EXCHANGE_EN == 1)
-        __sys_log("[setup] [+] Add TaskLANDataExchange");
-        xTaskCreatePinnedToCore(TaskLANDataExchange, "TaskLANDataExchange", 8192, NULL, 1, NULL, 0);
+        __sys_log("[setup] [+] Add TaskLANDataSend");
+        xTaskCreatePinnedToCore(TaskLANDataSend, "TaskLANDataSend", 2048, NULL, 1, NULL, 0);
+        __sys_log("[setup] [+] Add TaskLANDataReceive");
+        xTaskCreatePinnedToCore(TaskLANDataReceive, "TaskLANDataReceive", 2048, NULL, 1, NULL, 0);
     #endif
 
     #if (FIREBASE_SYNC_EN == 1)

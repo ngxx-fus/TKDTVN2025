@@ -27,7 +27,7 @@
 #define LIGHT_TICK_EN           1
 #define FIREBASE_SYNC_EN        1
 #define SENSOR_HCSR04_EN        0
-#define SENSOR_MPU6050_EN       1
+#define SENSOR_MPU6050_EN       0
 #define SENSOR_ATGM336H_EN      1
 #define LAN_DATA_EXCHANGE_EN    1
 
@@ -70,7 +70,42 @@
 #endif  /// (SENSOR_ATGM336H_EN == 1)
 
 #if (LAN_DATA_EXCHANGE_EN == 1)
-    #define ELDE_RX_BUF_SIZE        255
+
+    #define ELDE_FRAME_BEGIN            "FRAME_BEGIN"
+    #define ELDE_FRAME_END              "FRAME_END"
+    #define ELDE_TAG_CRC                "CRC"
+
+
+    #define ELDE_RX_BUF_SIZE        512
+
+    #define CRC_POLYNOMIAL          0x1021
+    #define ESP_USE_CRC_HW          0
+
+    #define ID_SENSOR_BASE          40
+    #define ID_SENSOR_MPU6050       (ID_SENSOR_BASE + 1)
+    #define ID_SENSOR_HCSR04        (ID_SENSOR_BASE + 2)
+    #define ID_SENSOR_ATGM336H      (ID_SENSOR_BASE + 3)
+
+    #define ID_STATUS_BASE          200
+    #define ID_STATUS_OKE           (ID_STATUS_BASE)
+    #define ID_STATUS_ERR           (ID_STATUS_BASE + 1)
+
+    #define THIS_ESP_UDP_PORT       2578
+    #define THIS_ESP_TCP_PORT       8579
+
+    #define SERVER_UDP_PORT         3546
+    #define SERVER_TCP_PORT         9527
+
+    /**
+     * General frame:   <"FRAME_BEGIN"> <BinaryByte-ID> <N BinaryByte-Data> <"CRC"> <CRCByteHigh><CRCByteLow> <"FRAME_END">
+     * Note: 
+     *      -   CRC16 only include payload field! 
+     *      -   If data is corrupted ---> marked as not-received (nothin' happend!)
+     *      -   "FRAME_BEGIN"   = 4652414d455f424547494e
+     *      -   "FRAME_END"     = 4652414d455f454e44
+     *      -   "CRC"           = 435243
+     */
+
 #endif /// (LAN_DATA_EXCHANGE_EN == 1)
 
 #if (FIREBASE_SYNC_EN == 1)

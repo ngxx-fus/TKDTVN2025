@@ -1,16 +1,3 @@
-Thực hiện các yêu cầu sau;
-- Comment English doxygen, single line, start with # 
-- Giữ nguyên logic, code cũ, chỉ bổ xung thêm các phần liên quan
-- Bổ sung thêm SelfIP, để tự loại bỏ gói tin cho chính mình gởi đi!
-- Sửa lỗi race condition, 
-[INFO] Shutting down...
-[TX-ERR] [Errno 9] Bad file descriptor
-[GPS] 17:28:15 | Loc: 10.88818, 106.78443 | Sats: 17
-[INFO] Bye. 
-
-
-CODE PYTHON CenterControlService.py:
-```
 import socket
 import struct
 import threading
@@ -22,29 +9,33 @@ import sys
 # /// -------------------------------------------------------------------------
 
 # /// UDP Configuration
-UDP_BROADCAST_IP= "255.255.255.255"
-UDP_IP          = "0.0.0.0"       # /// Listen on all interfaces
-UDP_PORT        = 3546            # /// Port to listen on
-ESP_PORT        = 2578            # /// Destination port for ESP32
-BUFFER_SIZE     = 1024            # /// Buffer size for socket
+UDP_BROADCAST_IP = "255.255.255.255"
+UDP_IP           = "0.0.0.0"       # /// Listen on all interfaces
+
+# /// List of ports to listen on simultaneously
+PORT_LISTEN_LIST = [2578, 3546] 
+
+ESP_PORT         = 2578            # /// Destination port for ESP32
+BUFFER_SIZE      = 1024            # /// Buffer size for socket
 
 # /// Frame Literals
-FRAME_BEGIN     = b"FRAME_BEGIN"
-FRAME_END       = b"FRAME_END"
-CRC_TAG         = b"CRC"
+# /// Frame: <FRAME_BEGIN> <ID> <DATA...> <CRC_TAG> <CRC_HI> <CRC_LO> <FRAME_END>
+FRAME_BEGIN      = b"FRAME_BEGIN"  # /// Hex: 4652414d455f424547494e
+FRAME_END        = b"FRAME_END"    # /// Hex: 4652414d455f454e44
+CRC_TAG          = b"CRC"          # /// Hex: 435243
 
 # /// Protocol IDs (Must match MCU definitions)
-ID_CTRL         = 40
-ID_MPU6050      = 41
-ID_HCSR04       = 42
-ID_ATGM336H     = 43
+ID_CTRL          = 40
+ID_MPU6050       = 41
+ID_HCSR04        = 42
+ID_ATGM336H      = 43
 
 # /// -------------------------------------------------------------------------
 # /// CRC ALGORITHM
 # /// -------------------------------------------------------------------------
 
 # /// Compute CRC16 (CCITT-FALSE/0x1021) for data integrity check
-# /// @param data: Bytes to calculate CRC on
+# /// @param data: Bytes to calculate CRC on (ID + Payload)
 # /// @return: 16-bit integer CRC value
 def computeCRC16_CCITT_FALSE(data: bytes) -> int:
     crc = 0xFFFF
@@ -70,13 +61,11 @@ class SensorData:
         self.updated = False
 
 # /// Class representing MPU6050 Data (Acc & Gyro)
-# /// Structure corresponds to 6 int16_t values
 class MPU6050Data(SensorData):
     def __init__(self):
         super().__init__()
         self.ax = 0; self.ay = 0; self.az = 0
         self.gx = 0; self.gy = 0; self.gz = 0
-        # /// Format: 6 short (int16), Little Endian
         self.fmt = "<hhhhhh" 
 
     # /// Unpack raw bytes into class attributes
@@ -89,13 +78,11 @@ class MPU6050Data(SensorData):
             print("[ERR] MPU6050 unpack failed size mismatch")
 
 # /// Class representing HCSR04 Data (4 Ultrasonic sensors)
-# /// Structure corresponds to 4 int16_t values
 class HCSR04Data(SensorData):
     def __init__(self):
         super().__init__()
         self.dist_f = 0; self.dist_r = 0
         self.dist_b = 0; self.dist_l = 0
-        # /// Format: 4 short (int16), Little Endian
         self.fmt = "<hhhh"
 
     # /// Unpack raw bytes into class attributes
@@ -108,7 +95,6 @@ class HCSR04Data(SensorData):
             print("[ERR] HCSR04 unpack failed size mismatch")
 
 # /// Class representing ATGM336H GPS Data
-# /// Structure corresponds to packed struct: Time(5xB), Year(H), Lat/Lon/Spd(3xf), Sats(B)
 class ATGM336HData(SensorData):
     def __init__(self):
         super().__init__()
@@ -116,7 +102,6 @@ class ATGM336HData(SensorData):
         self.day = 0; self.mon = 0; self.year = 0
         self.lat = 0.0; self.lon = 0.0; self.speed = 0.0
         self.sats = 0
-        # /// Format: 5xU8, 1xU16, 3xFloat, 1xU8 (Packed, Little Endian)
         self.fmt = "<BBBBBHfffB"
 
     # /// Unpack raw bytes into class attributes
@@ -129,6 +114,35 @@ class ATGM336HData(SensorData):
         except struct.error:
             print("[ERR] ATGM336H unpack failed size mismatch")
 
+# /// Class representing General/Unknown Data
+# /// Handles any ID not explicitly defined above
+class GeneralData(SensorData):
+    def __init__(self):
+        super().__init__()
+        self.packet_id = 0
+        self.data_size = 0
+        self.raw_data = b""
+
+    # /// Update the storage with ID and Raw Bytes
+    # /// @param pid: The Protocol ID extracted from header
+    # /// @param data: The raw payload bytes
+    def update(self, pid: int, data: bytes):
+        self.packet_id = pid
+        self.raw_data = data
+        self.data_size = len(data)
+        self.updated = True
+        
+        # /// Convert to hex string for easy visualization
+        hex_view = " ".join(f"{b:02X}" for b in self.raw_data)
+        print(f"[GEN] ID:{self.packet_id} Size:{self.data_size} Payload:[{hex_view}]")
+
+    # /// Get a specific byte at index i safely
+    # /// @return: Byte value (int) or 0 if out of bounds
+    def get_byte(self, index: int) -> int:
+        if 0 <= index < self.data_size:
+            return self.raw_data[index]
+        return 0
+
 # /// -------------------------------------------------------------------------
 # /// GLOBAL STORAGE
 # /// -------------------------------------------------------------------------
@@ -138,8 +152,10 @@ class GlobalStorage:
         self.mpu = MPU6050Data()
         self.hcsr = HCSR04Data()
         self.gps = ATGM336HData()
+        self.general = GeneralData() # /// Storage for unknown frames
+        
         self.lock = threading.Lock()
-        self.target_ip = None # /// Store the IP of the sender to reply to
+        self.target_ip = None 
 
 globals_data = GlobalStorage()
 
@@ -147,79 +163,79 @@ globals_data = GlobalStorage()
 # /// THREAD WORKERS
 # /// -------------------------------------------------------------------------
 
-# /// Worker for receiving and parsing UDP frames
+# /// Worker for receiving and parsing UDP frames from a specific socket
 class ReceiveThread(threading.Thread):
-    def __init__(self, socket_obj):
+    def __init__(self, socket_obj, port_id):
         super().__init__()
         self.sock = socket_obj
+        self.port_id = port_id
         self.running = True
 
-    # /// Helper: Parse MPU6050 packet
+    # /// Helpers for unpacking known types
     def UnpackMPU6050(self, payload):
         with globals_data.lock:
             globals_data.mpu.unpack(payload)
 
-    # /// Helper: Parse HCSR04 packet
     def UnpackHCSR04(self, payload):
         with globals_data.lock:
             globals_data.hcsr.unpack(payload)
 
-    # /// Helper: Parse ATGM336H packet
     def UnpackATGM336H(self, payload):
         with globals_data.lock:
             globals_data.gps.unpack(payload)
+            
+    # /// Helper for unpacking unknown types
+    def UnpackGeneral(self, pid, payload):
+        with globals_data.lock:
+            globals_data.general.update(pid, payload)
 
     # /// Main execution loop for receiver
     def run(self):
-        print("[RX-THREAD] Started.")
+        print(f"[RX-THREAD-{self.port_id}] Started listening on port {self.port_id}.")
         while self.running:
             try:
                 data, addr = self.sock.recvfrom(BUFFER_SIZE)
                 
-                # /// Store Sender IP for the SendThread to use
+                # /// Store Sender IP (Last known sender from any port)
                 if globals_data.target_ip != addr[0]:
                     globals_data.target_ip = addr[0]
-                    print(f"[RX-THREAD] Connection from {globals_data.target_ip}")
+                    print(f"[RX-{self.port_id}] New Connection from {globals_data.target_ip}")
 
                 # /// 1. Validate Frame Boundaries
                 if not (data.startswith(FRAME_BEGIN) and data.endswith(FRAME_END)):
-                    continue # Discard noise
+                    continue 
 
                 # /// 2. Strip Header and Footer
-                # Content: <ID><Data...><"CRC"><High><Low>
+                # /// Frame: [BEGIN] [ID+Payload] [CRC_TAG] [HI] [LO] [END]
                 inner_content = data[len(FRAME_BEGIN) : -len(FRAME_END)]
-
-                # /// 3. Separate Payload and CRC Section
-                # We expect the last 5 bytes to be: b'C', b'R', b'C', CRCHi, CRCLo
-                # Length check: Must be at least ID(1) + CRC(3) + Val(2) = 6 bytes
                 if len(inner_content) < 6:
                     continue
 
-                # /// Extract Payload (ID + Data) and CRC fields
-                # The CRC block (Tag + 2 bytes) is 5 bytes long at the end
+                # /// 3. Separate Payload and CRC Section
+                # /// CRC Section = "CRC" (3 bytes) + Val (2 bytes) = 5 bytes
                 crc_block_len = len(CRC_TAG) + 2 
                 payload = inner_content[: -crc_block_len] 
                 crc_section = inner_content[-crc_block_len:]
 
                 # /// 4. Check CRC Tag Presence
                 if not crc_section.startswith(CRC_TAG):
-                    print("[RX] Missing CRC Tag in frame")
                     continue
 
-                # /// 5. Extract Receive CRC Value
+                # /// 5. Verify CRC Integrity
                 rx_crc_bytes = crc_section[len(CRC_TAG):]
                 rx_crc_val = (rx_crc_bytes[0] << 8) | rx_crc_bytes[1]
-
-                # /// 6. Calculate CRC on Payload
+                
+                # /// Calculate CRC on [ID + Data]
                 calc_crc = computeCRC16_CCITT_FALSE(payload)
 
                 if rx_crc_val != calc_crc:
-                    print(f"[RX] CRC Mismatch! Rx:{hex(rx_crc_val)} vs Calc:{hex(calc_crc)}")
-                    continue # Discard frame
+                    print(f"[RX-{self.port_id}] CRC Mismatch")
+                    continue 
 
-                # /// 7. Route based on ID
+                # /// 6. Route based on ID
+                # /// payload[0] is ID, payload[1:] is Data
                 packet_id = payload[0]
-                packet_data = payload[1:] # Rest is data
+                packet_data = payload[1:] 
 
                 if packet_id == ID_MPU6050:
                     self.UnpackMPU6050(packet_data)
@@ -228,10 +244,13 @@ class ReceiveThread(threading.Thread):
                 elif packet_id == ID_ATGM336H:
                     self.UnpackATGM336H(packet_data)
                 else:
-                    print(f"[RX] Unknown ID: {packet_id}")
+                    # /// Route unknown ID to GeneralData
+                    self.UnpackGeneral(packet_id, packet_data)
 
             except Exception as e:
-                print(f"[RX-ERR] {e}")
+                # /// Ignore socket closed errors on shutdown
+                if self.running:
+                    print(f"[RX-ERR-{self.port_id}] {e}")
 
     # /// Stop the thread safely
     def stop(self):
@@ -241,44 +260,38 @@ class ReceiveThread(threading.Thread):
 class SendThread(threading.Thread):
     def __init__(self, socket_obj):
         super().__init__()
-        self.sock = socket_obj
+        self.sock = socket_obj # /// Uses one of the bound sockets to send
         self.running = True
-        self.seqnum = 0
 
-    # /// Construct a frame with the specified ID and binary data
+    # /// Construct a frame with CRC
     # /// Frame: BEGIN + ID + DATA + "CRC" + CRC16 + END
     def build_frame(self, cmd_id: int, data_bytes: bytes) -> bytes:
         payload = struct.pack("B", cmd_id) + data_bytes
         crc_val = computeCRC16_CCITT_FALSE(payload)
-        crc_bytes = struct.pack(">H", crc_val) # Big Endian for CRC High/Low manual handling
-        
-        frame = FRAME_BEGIN + payload + CRC_TAG + crc_bytes + FRAME_END
-        return frame
+        crc_bytes = struct.pack(">H", crc_val) 
+        return FRAME_BEGIN + payload + CRC_TAG + crc_bytes + FRAME_END
 
     # /// Main execution loop for sender
     def run(self):
         print("[TX-THREAD] Started.")
         while self.running:
-            time.sleep(1.0) # /// Send frequency: 1Hz
+            time.sleep(1.0) 
 
-            if globals_data.target_ip is None:
-                continue # Wait until we hear from ESP32
+            # /// Just broadcast if we don't have a target yet
+            target = globals_data.target_ip if globals_data.target_ip else UDP_BROADCAST_IP
 
             try:
-                # /// Req: Send ID=0, 4 bytes FF 00 EE 00
+                # /// Example: Send Ping/Keep-Alive
                 cmd_id = ID_CTRL
-                raw_data = bytes([0xFF, 0x00, 0xEE, 0x00, self.seqnum])
-                self.seqnum = (self.seqnum+1)%256
+                raw_data = bytes([0xFF, 0x00, 0xEE, 0x00])
+                packet = self.build_frame(cmd_id, raw_data)
                 
-                packet = self.build_frame(self.seqnum, raw_data)
-                
-                # self.sock.sendto(packet, (globals_data.target_ip, ESP_PORT))
-                self.sock.sendto(packet, (UDP_BROADCAST_IP, ESP_PORT))
-                # print(f"[TX] Sent Ctrl Frame to {globals_data.target_ip}")
-                print(f"[TX] Sent Ctrl Frame to {UDP_BROADCAST_IP}")
+                # /// Send to the ESP port
+                self.sock.sendto(packet, (target, ESP_PORT))
                 
             except Exception as e:
-                print(f"[TX-ERR] {e}")
+                if self.running:
+                    print(f"[TX-ERR] {e}")
 
     # /// Stop the thread safely
     def stop(self):
@@ -291,20 +304,50 @@ class SendThread(threading.Thread):
 # /// Main Application Class
 class CenterControlApp:
     def __init__(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.sock.bind((UDP_IP, UDP_PORT))
-        # /// Set timeout to allow thread to check stop condition occasionally
-        # self.sock.settimeout(1.0) 
+        self.sockets = []
+        self.rx_threads = []
+        self.tx_thread = None
+
+        # /// Initialize Sockets for all ports in list
+        self.init_sockets()
+
+    # /// Create a socket for each port in PORT_LISTEN_LIST
+    def init_sockets(self):
+        print(f"/// Initializing Listener on ports: {PORT_LISTEN_LIST} ///")
         
-        self.rx_thread = ReceiveThread(self.sock)
-        self.tx_thread = SendThread(self.sock)
+        for port in PORT_LISTEN_LIST:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                sock.bind((UDP_IP, port))
+                
+                # /// Add to managed list
+                self.sockets.append(sock)
+                
+                # /// Create a dedicated RX thread for this socket
+                rx_t = ReceiveThread(sock, port)
+                self.rx_threads.append(rx_t)
+                
+            except Exception as e:
+                print(f"[INIT-ERR] Failed to bind port {port}: {e}")
+
+        # /// Assign the first successfully bound socket to the TX Thread
+        # /// (Any bound socket can send data out)
+        if len(self.sockets) > 0:
+            self.tx_thread = SendThread(self.sockets[0])
+        else:
+            print("[CRITICAL] No sockets could be bound. Exiting.")
+            sys.exit(1)
 
     # /// Start all tasks
     def start(self):
-        print(f"/// Center Control Service Started on UDP {UDP_PORT} ///")
-        self.rx_thread.start()
-        self.tx_thread.start()
+        # /// Start all RX threads
+        for t in self.rx_threads:
+            t.start()
+        
+        # /// Start TX thread
+        # if self.tx_thread:
+            # self.tx_thread.start()
         
         self.main_loop()
 
@@ -312,26 +355,32 @@ class CenterControlApp:
     def main_loop(self):
         try:
             while True:
-                # /// Process events if necessary (GUI or Logic)
-                # /// Currently just idle to keep main thread alive
-                time.sleep(0.1)
+                time.sleep(0.5)
         except KeyboardInterrupt:
             print("\n[INFO] Shutting down...")
             self.stop()
 
     # /// Cleanup and stop threads
     def stop(self):
-        self.rx_thread.stop()
-        self.tx_thread.stop()
+        # /// Signal all threads to stop
+        for t in self.rx_threads:
+            t.stop()
+        if self.tx_thread:
+            self.tx_thread.stop()
         
-        # /// Close socket to force threads out of blocking calls
-        self.sock.close()
+        # /// Close all sockets to unblock recvfrom()
+        print("[INFO] Closing sockets...")
+        for s in self.sockets:
+            s.close()
         
-        self.rx_thread.join()
-        self.tx_thread.join()
+        # /// Wait for threads to finish
+        for t in self.rx_threads:
+            t.join()
+        if self.tx_thread:
+            self.tx_thread.join()
+            
         print("[INFO] Bye.")
 
 if __name__ == "__main__":
     app = CenterControlApp()
     app.start()
-```

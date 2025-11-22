@@ -4,239 +4,258 @@
 #include "espLANDataExchange.h"
 
 WiFiUDP eldeUdp;
-WiFiClient eldeTcp;
-
-/// Buffer for RX UDP
-#ifndef ELDE_RX_BUF_SIZE
-#define ELDE_RX_BUF_SIZE 255
-#endif
 uint8_t eldeUdpRxBuf[ELDE_RX_BUF_SIZE];
-int eldeUdpRxLen = 0;
-bool eldeUdpHasData = false;
 
-/// Static buffer to store Self IP string persistently
+/// Variable to store the length of the last received packet
+static int _lastRxLen = 0;
+
+/// Static buffer for Self IP
 static char _selfIpStrBuf[16] = "0.0.0.0";
 
-/// Define thisESP default configuration (Can be modified in setup() before init)
 espLANHost_t thisESP = {
-    .ip = _selfIpStrBuf,      ///< Will point to static buffer updated by eldeUpdateSelfIP
+    .ip = _selfIpStrBuf,
     .hostName = "ESP32_CLIENT",
-    .port = {
-        .udp = 4210,          ///< Default Listening UDP Port
-        .tcp = 4211           ///< Default Listening TCP Port (if server mode used)
-    }
+    .port = { .udp = THIS_ESP_UDP_PORT, .tcp = THIS_ESP_TCP_PORT }
 };
 
-#if (FIREBASE_SYNC_EN == 0)
-    void wfInit(){
-        /// Define wait intervals (microseconds)
-        const int64_t SHORT_WAIT   = 2000000;   /// 2s
-        const int64_t MEDIUM_WAIT  = 60000000;  /// 1 min
-        const int64_t LONG_WAIT    = 600000000; /// 10 min
+espLANHost_t broadcastHost = {
+    .ip = "255.255.255.255", // Broadcast or specific IP
+    .hostName = "CENTER_CONTROL_SERVICE",
+    .port = { .udp = SERVER_UDP_PORT, .tcp = SERVER_TCP_PORT }
+};
 
-        int attemptCount = 0; 
-        int64_t waitTimeUs = 0;
-        espSoftTimer_t wfTimer;
-
-        WiFi.mode(WIFI_STA);
-        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-        /// Loop until connected
-        while(WiFi.status() != WL_CONNECTED){
-            attemptCount++;
-            
-            /// Calculate backoff time based on attempt count
-            if(attemptCount < 10){
-                waitTimeUs = SHORT_WAIT;    // Retries 1-10: 2s
-            } else if(attemptCount < 20){
-                waitTimeUs = MEDIUM_WAIT;   // Retries 11-20: 1 min
-            } else {
-                waitTimeUs = LONG_WAIT;     // Retries 20+: 10 min
-            }
-
-            __sys_log("[wfInit] Connecting to Wi-fi... (Attempt: %d, Wait: %ds)", 
-                    attemptCount, (int)(waitTimeUs/1000000));
-            
-            /// Initialize timer
-            espSoftTimerInit(&wfTimer, waitTimeUs);
-
-            /// Safe Wait: Yields to OS while waiting
-            __EST_WAIT_EXEC(&wfTimer, vTaskDelay(pdMS_TO_TICKS(100)));
-            
-            /// Hard Retry: Re-trigger connection logic if stuck too long
-            if (attemptCount % 20 == 0) {
-                WiFi.disconnect();
-                WiFi.reconnect();
-            }
-        }
-        __sys_log("[wfInit] Connected to Wi-fi!");
-        __sys_log("[wfInit] IP Address: %s", WiFi.localIP().toString().c_str());
-    }
-#endif /// (FIREBASE_SYNC_EN == 0)
-
-/// Update thisESP.ip with current WiFi local IP
+/// @brief Update thisESP.ip with current WiFi local IP
 void eldeUpdateSelfIP() {
     if (WiFi.status() == WL_CONNECTED) {
         String ip = WiFi.localIP().toString();
-        // Copy string to static buffer to ensure persistence
         strncpy(_selfIpStrBuf, ip.c_str(), sizeof(_selfIpStrBuf) - 1);
-        _selfIpStrBuf[sizeof(_selfIpStrBuf) - 1] = '\0'; // Ensure null-terminate
-    } else {
-        __sys_err("[ELDE] UpdateIP Failed: WiFi Disconnected");
     }
 }
 
-/// Initialize UDP Listener based on thisESP configuration
 def eldeInit() {
-    if (WiFi.status() != WL_CONNECTED) {
-        __sys_err("[ELDE] Init Failed: WiFi Disconnected");
-        return STATUS_ERR;
-    }
-
-    // Update IP info
+    if (WiFi.status() != WL_CONNECTED) return STATUS_ERR;
     eldeUpdateSelfIP();
-    
-    // Start listening on My UDP Port
     if (eldeUdp.begin(thisESP.port.udp)) {
+        __sys_log("[ELDE] Listening on UDP Port: %d", thisESP.port.udp);
         return STATUS_OKE;
     }
-    
-    __sys_err("[ELDE] UDP Begin Failed on Port: %d", thisESP.port.udp);
     return STATUS_ERR;
 }
 
-/// Send UDP Byte to Target
-def espUDPSendByte(const espLANHost_t* target, uint8_t data) {
-    if (target == NULL) {
-        __sys_err("[ELDE] UDP Send Failed: Target NULL");
-        return STATUS_ERR;
-    }
+/// @brief Calculate CRC16 (Poly 0x1021) supporting both HW and SW
+uint16_t computeCRC16(void* ByteArr, int ByteArrSize, int16_t CRCInitValue) {
+    uint8_t* data = (uint8_t*)ByteArr;
+    
+    #if (defined(ESP32) && (ESP_USE_CRC_HW == 1))
+        /// [HW] Use ESP32 ROM CRC (Fast, Big Endian result matching Poly 0x1021)
+        return esp_rom_crc16_be((uint16_t)CRCInitValue, data, (uint32_t)ByteArrSize);
+    #else
+        /// [SW] Manual calculation for portability
+        uint16_t crc = (uint16_t)CRCInitValue;
+        for (int i = 0; i < ByteArrSize; i++) {
+            crc ^= ((uint16_t)data[i] << 8);
+            for (uint8_t j = 0; j < 8; j++) {
+                if (crc & 0x8000) {
+                    crc = (crc << 1) ^ CRC_POLYNOMIAL;
+                } else {
+                    crc <<= 1;
+                }
+            }
+        }
+        return crc;
+    #endif
+}
 
-    if (eldeUdp.beginPacket(target->ip, target->port.udp)) {
-        eldeUdp.write(data);
-        if (eldeUdp.endPacket()) {
-            return STATUS_OKE;
+/// @brief Construct and Send Frame
+def eldeSendFrame(uint8_t id, void* data, uint8_t len, const espLANHost_t* target) {
+    if (target == NULL) return STATUS_ERR;
+
+    uint8_t txBuf[256];
+    int idx = 0;
+    
+    /// 1. Frame Start: "FRAME_BEGIN"
+    size_t tagStartLen = strlen(ELDE_FRAME_BEGIN);
+    memcpy(&txBuf[idx], ELDE_FRAME_BEGIN, tagStartLen);
+    idx += tagStartLen;
+
+    /// --- PAYLOAD BEGIN (CRC Calculation Start) ---
+    int payloadStartIdx = idx;
+
+    /// 2. Payload: <ID>
+    txBuf[idx++] = id;
+
+    /// 3. Payload: <Data>
+    if (len > 0 && data != NULL) {
+        memcpy(&txBuf[idx], data, len);
+        idx += len;
+    }
+    
+    /// Determine Payload Size
+    int payloadSize = idx - payloadStartIdx;
+    
+    /// 4. Calculate CRC on Payload ONLY (ID + Data)
+    uint16_t crcVal = computeCRC16(&txBuf[payloadStartIdx], payloadSize, 0xFFFF);
+
+    /// 5. Tag: "CRC"
+    size_t tagCrcLen = strlen(ELDE_TAG_CRC);
+    memcpy(&txBuf[idx], ELDE_TAG_CRC, tagCrcLen);
+    idx += tagCrcLen;
+
+    /// 6. CRC Value: <HighByte><LowByte>
+    txBuf[idx++] = (uint8_t)((crcVal >> 8) & 0xFF); /// High Byte
+    txBuf[idx++] = (uint8_t)(crcVal & 0xFF);        /// Low Byte
+
+    /// 7. Frame End: "FRAME_END"
+    size_t tagEndLen = strlen(ELDE_FRAME_END);
+    memcpy(&txBuf[idx], ELDE_FRAME_END, tagEndLen);
+    idx += tagEndLen;
+
+    /// 8. Send UDP
+    if (WiFi.status() == WL_CONNECTED && eldeUdp.beginPacket(target->ip, target->port.udp)) {
+        eldeUdp.write(txBuf, idx);
+        if (eldeUdp.endPacket()) return STATUS_OKE;
+    }
+    
+    return STATUS_ERR;
+}
+
+/// @brief Check UDP buffer, skip loopbacks, read first valid packet within timeout
+/// @param timeoutMs Maximum time (in ms) to spend processing the buffer to avoid blocking
+/// @return 1 (STATUS_OKE) if valid packet found, 0 (STATUS_ERR) on timeout or empty buffer
+def hasReceivedFrame(uint32_t timeoutMs) {
+    /// Convert timeout to microseconds (us) for internal precision
+    int64_t timeoutUs = (int64_t)timeoutMs * 1000;
+    
+    /// Get start time in microseconds (uptime since boot)
+    int64_t startUs = esp_timer_get_time();
+    
+    int packetSize;
+    
+    /// Loop until buffer is empty or valid packet found
+    while ((packetSize = eldeUdp.parsePacket())) {
+        
+        /// 0. Yield to OS: Prevent WiFi stack starvation & watchdog issues
+        yield(); 
+
+        /// 1. Timeout Protection (Compare in microseconds)
+        if ((esp_timer_get_time() - startUs) > timeoutUs) {
+            return 0; /// Timeout occurred
+        }
+
+        /// 2. Filter Loopback: Ignore packets from self
+        if (eldeUdp.remoteIP() == WiFi.localIP()) {
+            /// Trash packet (Important: Flush/Read to remove it from stack)
+            eldeUdp.flush(); 
+            continue; 
+        }
+
+        /// 3. Valid packet found!
+        /// Cap packet size to prevent buffer overflow
+        if (packetSize > ELDE_RX_BUF_SIZE) {
+             packetSize = ELDE_RX_BUF_SIZE; 
+        }
+
+        /// Read payload into global buffer
+        int len = eldeUdp.read(eldeUdpRxBuf, packetSize);
+        if (len > 0) {
+            _lastRxLen = len;
+            return 1; /// STATUS_OKE
         }
     }
     
-    __sys_err("[ELDE] UDP Send Byte Failed -> %s:%d", target->ip, target->port.udp);
-    return STATUS_ERR;
+    return 0; /// STATUS_ERR (No packet or Empty)
 }
 
-/// Send UDP Array to Target
-def espUDPSendByteArr(const espLANHost_t* target, const uint8_t* data, size_t len) {
-    if (target == NULL) {
-        __sys_err("[ELDE] UDP SendArr Failed: Target NULL");
+/// @brief Parse Frame, Validate CRC, Extract Data
+def getFrameData(uint8_t *ID, int *DataSize, void* Buffer, int BufferSize) {
+    if (_lastRxLen == 0) return STATUS_ERR;
+
+    /// 1. Calculate structure sizes
+    size_t startTagLen = strlen(ELDE_FRAME_BEGIN);
+    size_t endTagLen = strlen(ELDE_FRAME_END);
+    size_t crcTagLen = strlen(ELDE_TAG_CRC);
+    size_t crcValLen = 2;
+
+    /// Minimal size = START + ID(1) + CRC_TAG + CRC_VAL + END
+    size_t minLen = startTagLen + 1 + crcTagLen + crcValLen + endTagLen;
+
+    if (_lastRxLen < minLen) {
+        _lastRxLen = 0; /// Clear flag
         return STATUS_ERR;
     }
 
-    if (eldeUdp.beginPacket(target->ip, target->port.udp)) {
-        eldeUdp.write(data, len);
-        if (eldeUdp.endPacket()) {
-            return STATUS_OKE;
-        }
-    }
-
-    __sys_err("[ELDE] UDP Send Arr Failed -> %s:%d", target->ip, target->port.udp);
-    return STATUS_ERR;
-}
-
-/// Send TCP Byte to Target
-def espTCPSendByte(const espLANHost_t* target, uint8_t data) {
-    if (target == NULL) {
-        __sys_err("[ELDE] TCP Send Failed: Target NULL");
+    /// 2. Validate Header (FRAME_BEGIN)
+    if (memcmp(eldeUdpRxBuf, ELDE_FRAME_BEGIN, startTagLen) != 0) {
         return STATUS_ERR;
     }
 
-    // Check if connected. If we switch targets, we might need to handle disconnects logic here or outside.
-    if (!eldeTcp.connected()) {
-        if (!eldeTcp.connect(target->ip, target->port.tcp)) {
-            __sys_err("[ELDE] TCP Connect Failed -> %s:%d", target->ip, target->port.tcp);
-            return STATUS_ERR;
-        }
+    /// 3. Validate Footer (FRAME_END) - At the very end
+    int endTagIdx = _lastRxLen - endTagLen;
+    if (memcmp(&eldeUdpRxBuf[endTagIdx], ELDE_FRAME_END, endTagLen) != 0) {
+        return STATUS_ERR;
     }
+
+    /// 4. Validate CRC Tag ("CRC") - Before CRC Value
+    int crcValIdx = endTagIdx - crcValLen;
+    int crcTagIdx = crcValIdx - crcTagLen;
+    if (memcmp(&eldeUdpRxBuf[crcTagIdx], ELDE_TAG_CRC, crcTagLen) != 0) {
+        return STATUS_ERR;
+    }
+
+    /// 5. Extract CRC from frame (Little Endian)
+    uint16_t receivedCRC = (uint16_t)eldeUdpRxBuf[crcValIdx] << 8 | eldeUdpRxBuf[crcValIdx + 1];
+
+    /// 6. Calculate CRC for Payload (From ID up to CRC Tag Start)
+    /// Payload starts after FRAME_BEGIN, ends at CRC Tag
+    int payloadStartIdx = startTagLen;
+    int payloadLen = crcTagIdx - payloadStartIdx;
     
-    if (eldeTcp.write(data) > 0) {
-        return STATUS_OKE;
-    }
+    uint16_t calculatedCRC = computeCRC16(&eldeUdpRxBuf[payloadStartIdx], payloadLen, 0xFFFF);
 
-    __sys_err("[ELDE] TCP Write Byte Failed");
-    return STATUS_ERR;
-}
-
-/// Send TCP Array to Target
-def espTCPSendByteArr(const espLANHost_t* target, const uint8_t* data, size_t len) {
-    if (target == NULL) {
-        __sys_err("[ELDE] TCP SendArr Failed: Target NULL");
+    if (calculatedCRC != receivedCRC) {
+        __sys_err("[ELDE] CRC Mismatch! RX:0x%04X Calc:0x%04X", receivedCRC, calculatedCRC);
         return STATUS_ERR;
     }
 
-    if (!eldeTcp.connected()) {
-        if (!eldeTcp.connect(target->ip, target->port.tcp)) {
-            __sys_err("[ELDE] TCP Connect Failed -> %s:%d", target->ip, target->port.tcp);
-            return STATUS_ERR;
+    /// 7. CRC OK - Extract Data
+    /// ID is the first byte of payload
+    if (ID != NULL) {
+        *ID = eldeUdpRxBuf[payloadStartIdx];
+    }
+
+    /// Data is remaining bytes of payload
+    int dataLen = payloadLen - 1; // Subtract ID byte
+    if (DataSize != NULL) {
+        *DataSize = dataLen;
+    }
+
+    /// Copy data to user buffer if valid
+    if (dataLen > 0) {
+        if (dataLen > BufferSize) {
+             __sys_err("[ELDE] User buffer too small! Need: %d", dataLen);
+             return STATUS_ERR;
+        }
+
+        /// Skip memcpy if user passed the system buffer itself
+        if (Buffer != NULL && Buffer != eldeUdpRxBuf) {
+            memcpy(Buffer, &eldeUdpRxBuf[payloadStartIdx + 1], dataLen);
         }
     }
 
-    if (eldeTcp.write(data, len) == len) {
-        return STATUS_OKE;
-    }
+    /// Reset length to avoid re-reading same packet
+    _lastRxLen = 0; 
     
-    __sys_err("[ELDE] TCP Write Arr Failed");
-    return STATUS_ERR;
+    return STATUS_OKE;
 }
 
-/// Poll Incoming UDP Data
+/// @brief Poll for incoming UDP packets
 void eldePoll() {
-    int packetSize = eldeUdp.parsePacket();
-    if (packetSize > 0) {
-        // Limit read size to buffer size
-        int len = packetSize > ELDE_RX_BUF_SIZE ? ELDE_RX_BUF_SIZE : packetSize;
-        
-        eldeUdp.read(eldeUdpRxBuf, len);
-        eldeUdpRxLen = len;
-        eldeUdpHasData = true; // Set flag
+    /// Simply check and discard if just polling without processing
+    /// Or use hasReceivedFrame() in main loop
+    if (hasReceivedFrame(1)) {
+        // Auto clear if not processed immediately in Poll mode
+        // Or keep it for getFrameData
     }
 }
 
-/// Receive UDP Byte
-def espUDPReceiveByte(uint8_t* outData) {
-    if (eldeUdpHasData && eldeUdpRxLen > 0) {
-        *outData = eldeUdpRxBuf[0];
-        // Note: Does not clear flag, allowing ByteArr read of same packet
-        return STATUS_OKE;
-    }
-    return STATUS_ERR;
-}
-
-/// Receive UDP Array
-def espUDPReceiveByteArr(uint8_t* buffer, size_t maxLen) {
-    if (eldeUdpHasData && eldeUdpRxLen > 0) {
-        size_t copyLen = (eldeUdpRxLen < maxLen) ? eldeUdpRxLen : maxLen;
-        memcpy(buffer, eldeUdpRxBuf, copyLen);
-        
-        eldeUdpHasData = false; // Clear flag after reading full packet
-        return (def)copyLen;
-    }
-    return STATUS_ERR;
-}
-
-/// Receive TCP Byte
-def espTCPReceiveByte(uint8_t* outData) {
-    if (eldeTcp.connected() && eldeTcp.available()) {
-        *outData = eldeTcp.read();
-        return STATUS_OKE;
-    }
-    return STATUS_ERR;
-}
-
-/// Receive TCP Array
-def espTCPReceiveByteArr(uint8_t* buffer, size_t maxLen) {
-    if (eldeTcp.connected() && eldeTcp.available()) {
-        int len = eldeTcp.read(buffer, maxLen);
-        return (def)len;
-    }
-    return STATUS_ERR;
-}
-
-#endif /// (LAN_DATA_EXCHANGE_EN == 1)
+#endif

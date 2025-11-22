@@ -1,16 +1,3 @@
-Thực hiện các yêu cầu sau;
-- Comment English doxygen, single line, start with # 
-- Giữ nguyên logic, code cũ, chỉ bổ xung thêm các phần liên quan
-- Bổ sung thêm SelfIP, để tự loại bỏ gói tin cho chính mình gởi đi!
-- Sửa lỗi race condition, 
-[INFO] Shutting down...
-[TX-ERR] [Errno 9] Bad file descriptor
-[GPS] 17:28:15 | Loc: 10.88818, 106.78443 | Sats: 17
-[INFO] Bye. 
-
-
-CODE PYTHON CenterControlService.py:
-```
 import socket
 import struct
 import threading
@@ -243,7 +230,6 @@ class SendThread(threading.Thread):
         super().__init__()
         self.sock = socket_obj
         self.running = True
-        self.seqnum = 0
 
     # /// Construct a frame with the specified ID and binary data
     # /// Frame: BEGIN + ID + DATA + "CRC" + CRC16 + END
@@ -267,10 +253,9 @@ class SendThread(threading.Thread):
             try:
                 # /// Req: Send ID=0, 4 bytes FF 00 EE 00
                 cmd_id = ID_CTRL
-                raw_data = bytes([0xFF, 0x00, 0xEE, 0x00, self.seqnum])
-                self.seqnum = (self.seqnum+1)%256
+                raw_data = bytes([0xFF, 0x00, 0xEE, 0x00])
                 
-                packet = self.build_frame(self.seqnum, raw_data)
+                packet = self.build_frame(cmd_id, raw_data)
                 
                 # self.sock.sendto(packet, (globals_data.target_ip, ESP_PORT))
                 self.sock.sendto(packet, (UDP_BROADCAST_IP, ESP_PORT))
@@ -334,4 +319,3 @@ class CenterControlApp:
 if __name__ == "__main__":
     app = CenterControlApp()
     app.start()
-```

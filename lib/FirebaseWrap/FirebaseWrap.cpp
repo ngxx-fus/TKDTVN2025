@@ -21,54 +21,74 @@ def wfIsConnected(){
     return STATUS_OKE;
 }
 
-/// @brief Initialize Wi-Fi with Dynamic Backoff Strategy (Non-blocking)
-#ifndef wfInit_function
-    #define wfInit_function
-    void wfInit(){
-        /// Define wait intervals (microseconds)
-        const int64_t SHORT_WAIT   = 2000000;   /// 2s
-        const int64_t MEDIUM_WAIT  = 60000000;  /// 1 min
-        const int64_t LONG_WAIT    = 600000000; /// 10 min
+/// @brief Initialize Wi-Fi with Dynamic Backoff Strategy and RSSI Scanning
+void wfInit(){
+    /// Define wait intervals (microseconds)
+    const int64_t SHORT_WAIT   = 2000000;   /// 2s
+    const int64_t MEDIUM_WAIT  = 60000000;  /// 1 min
+    const int64_t LONG_WAIT    = 600000000; /// 10 min
 
-        int attemptCount = 0; 
-        int64_t waitTimeUs = 0;
-        espSoftTimer_t wfTimer;
+    int attemptCount = 0; 
+    int64_t waitTimeUs = 0;
+    espSoftTimer_t wfTimer;
 
-        WiFi.mode(WIFI_STA);
+    __sys_log("[wfInit] Connect to ssid=\'%s\' pw=\'%s\'", WIFI_SSID, WIFI_PASSWORD);
+
+    WiFi.mode(WIFI_STA);
+    // Note: WiFi.begin will be called inside the loop after scanning to avoid conflict
+
+    /// Loop until connected
+    while(WiFi.status() != WL_CONNECTED){
+        
+        /// Scan for networks (Block execution for ~2-5s)
+        __sys_log("[wfInit] Scanning networks...");
+        int n = WiFi.scanNetworks();
+        
+        /// Log Top 10 strongest networks
+        /// Format: <Index> <RSSI> <SSID> <Channel>
+        int limit = (n < 10) ? n : 10;
+        for (int i = 0; i < limit; ++i) {
+            __sys_log("<%d> RSSI=%d SSID=%s CH=%d", 
+                      i + 1, 
+                      WiFi.RSSI(i), 
+                      WiFi.SSID(i).c_str(), 
+                      WiFi.channel(i)); 
+        }
+        WiFi.scanDelete(); /// Clean up RAM after scan
+
+        /// Start connection attempt (Must be called after scan)
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-        /// Loop until connected
-        while(WiFi.status() != WL_CONNECTED){
-            attemptCount++;
-            
-            /// Calculate backoff time based on attempt count
-            if(attemptCount < 10){
-                waitTimeUs = SHORT_WAIT;    // Retries 1-10: 2s
-            } else if(attemptCount < 20){
-                waitTimeUs = MEDIUM_WAIT;   // Retries 11-20: 1 min
-            } else {
-                waitTimeUs = LONG_WAIT;     // Retries 20+: 10 min
-            }
-
-            __sys_log("[wfInit] Connecting to Wi-fi... (Attempt: %d, Wait: %ds)", 
-                    attemptCount, (int)(waitTimeUs/1000000));
-            
-            /// Initialize timer
-            espSoftTimerInit(&wfTimer, waitTimeUs);
-
-            /// Safe Wait: Yields to OS while waiting
-            __EST_WAIT_EXEC(&wfTimer, vTaskDelay(pdMS_TO_TICKS(100)));
-            
-            /// Hard Retry: Re-trigger connection logic if stuck too long
-            if (attemptCount % 20 == 0) {
-                WiFi.disconnect();
-                WiFi.reconnect();
-            }
+        attemptCount++;
+        
+        /// Calculate backoff time based on attempt count
+        if(attemptCount < 10){
+            waitTimeUs = SHORT_WAIT;    // Retries 1-10: 2s
+        } else if(attemptCount < 20){
+            waitTimeUs = MEDIUM_WAIT;   // Retries 11-20: 1 min
+        } else {
+            waitTimeUs = LONG_WAIT;     // Retries 20+: 10 min
         }
-        __sys_log("[wfInit] Connected to Wi-fi!");
-        __sys_log("[wfInit] IP Address: %s", WiFi.localIP().toString().c_str());
+
+        __sys_log("[wfInit] Connecting to Wi-fi... (Attempt: %d, Wait: %ds)", 
+                attemptCount, (int)(waitTimeUs/1000000));
+        
+        /// Initialize timer
+        espSoftTimerInit(&wfTimer, waitTimeUs);
+
+        /// Safe Wait: Yields to OS while waiting
+        __EST_WAIT_EXEC(&wfTimer, vTaskDelay(pdMS_TO_TICKS(100)));
+        
+        /// Hard Retry: Logic included naturally by calling begin() after scan
+        /// But we can keep explicit disconnect if really stuck
+        if (attemptCount % 20 == 0) {
+            WiFi.disconnect();
+            WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+        }
     }
-#endif /// wfInit
+    __sys_log("[wfInit] Connected to Wi-fi!");
+    __sys_log("[wfInit] IP Address: %s", WiFi.localIP().toString().c_str());
+}
 
 /// @brief Initialize Firebase with Dynamic Backoff Strategy (Non-blocking)
 /// @details Handles cases where WiFi is connected but Internet is missing.
